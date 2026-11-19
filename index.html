@@ -1,2573 +1,821 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#064e3b">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Control de Bodega & Vales de Entrega</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#006837" />
+  <title>CFE Bodega - Zona Altos / Área Yahualica</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
   <style>
-    /* ==========================================================================
-       SISTEMA DE DISEÑO OFFLINE (100% CSS PURO - SIN DEPENDENCIAS DE INTERNET)
-       Paleta: Verde Oscuro Industrial (#064e3b / #047857), Gris Pizarra y Blanco
-       ========================================================================== */
     :root {
-      --primary: #064e3b;       /* Verde oscuro industrial */
-      --primary-hover: #065f46;
-      --primary-light: #ecfdf5;
-      --accent: #059669;
-      --slate-900: #0f172a;
-      --slate-800: #1e293b;
-      --slate-700: #334155;
-      --slate-600: #475569;
-      --slate-500: #64748b;
-      --slate-300: #cbd5e1;
-      --slate-200: #e2e8f0;
-      --slate-100: #f1f5f9;
-      --slate-50: #f8fafc;
-      --white: #ffffff;
-      --danger: #dc2626;
-      --danger-light: #fef2f2;
-      --warning: #d97706;
-      --warning-light: #fffbeb;
-      --radius: 12px;
-      --radius-sm: 8px;
-      --shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-      --nav-height: 68px;
+      --cfe-green: #006837;
+      --cfe-green-dark: #004725;
+      --cfe-green-light: #e8f5e9;
+      --bg: #f3f6f4;
+      --card: #ffffff;
+      --text: #1c2420;
+      --muted: #5c6b63;
+      --border: #d5dfd9;
+      --danger: #c62828;
+      --danger-bg: #ffebee;
+      --primary: #1565c0;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--slate-100);
-      color: var(--slate-900);
-      line-height: 1.45;
-      padding-bottom: calc(var(--nav-height) + 20px);
-      overflow-x: hidden;
-    }
-
-    /* Cabecera Superior */
-    .app-header {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--slate-800) 100%);
-      color: var(--white);
-      padding: 14px 16px;
-      position: sticky;
-      top: 0;
-      z-index: 40;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .header-title-wrap {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .role-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.68rem;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 999px;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-      cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.35);
-      background: rgba(255,255,255,0.16);
-      color: #ffffff;
-    }
-
-    .role-pill.tech {
-      background: #fef3c7;
-      color: #92400e;
-      border-color: #f59e0b;
-    }
-
-    .alert-banner {
-      background: linear-gradient(90deg, #b45309 0%, #d97706 100%);
-      color: #ffffff;
-      padding: 10px 14px;
-      font-size: 0.82rem;
-      font-weight: 700;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      box-shadow: 0 3px 10px rgba(180, 83, 9, 0.25);
-      animation: slideDown 0.25s ease-out;
-    }
-
-    .alert-banner.entry {
-      background: linear-gradient(90deg, #047857 0%, #059669 100%);
-    }
-
-    .btn-tech-entry {
-      background-color: #0284c7;
-      color: #ffffff;
-      box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25);
-    }
-
-    .btn-tech-entry:hover {
-      background-color: #0369a1;
-    }
-
-    .header-icon {
-      background: rgba(255,255,255,0.14);
-      padding: 8px;
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 40px; }
+    .container { max-width: 980px; margin: 0 auto; }
+    header {
+      background: linear-gradient(135deg, var(--cfe-green), var(--cfe-green-dark));
+      color: #fff;
+      padding: 16px;
       border-radius: 10px;
+      margin-bottom: 14px;
       display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
     }
-
-    .app-header h1 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-badge {
+      width: 44px; height: 44px; border-radius: 50%; background: #fff; color: var(--cfe-green);
+      display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px;
     }
+    .brand h1 { font-size: 18px; letter-spacing: 0.5px; }
+    .brand p { font-size: 12px; opacity: 0.92; }
+    .session-box { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; }
+    .pill { background: rgba(255,255,255,0.18); padding: 5px 10px; border-radius: 20px; font-weight: bold; }
 
-    .app-header p {
-      font-size: 0.72rem;
-      color: #a7f3d0;
-      font-weight: 500;
-    }
-
-    .btn-download-app {
-      background: rgba(255, 255, 255, 0.15);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: var(--white);
-      font-size: 0.72rem;
-      font-weight: 600;
-      padding: 7px 10px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      white-space: nowrap;
-      transition: background 0.2s;
-    }
-
-    .btn-download-app:active {
-      background: rgba(255, 255, 255, 0.28);
-    }
-
-    /* Contenedor Principal */
-    .container {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 14px;
-    }
-
-    /* Pestañas / Secciones */
-    .tab-section {
-      display: none;
-      animation: fadeIn 0.18s ease-out;
-    }
-
-    .tab-section.active {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Tarjetas */
     .card {
-      background: var(--white);
-      border-radius: var(--radius);
-      padding: 16px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--slate-200);
-      margin-bottom: 14px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.04);
     }
+    h2 { font-size: 16px; color: var(--cfe-green); margin-bottom: 12px; border-bottom: 2px solid var(--cfe-green-light); padding-bottom: 6px; }
+    h3 { font-size: 14px; margin: 14px 0 8px; color: var(--text); }
 
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--slate-100);
-    }
-
-    .card-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--slate-800);
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    /* Formularios e Inputs */
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-
-    @media (min-width: 540px) {
-      .form-grid-2 {
-        grid-template-columns: 1fr 1fr;
-      }
-      .form-grid-3 {
-        grid-template-columns: 2fr 1fr 1fr;
-      }
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    label {
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--slate-700);
-      text-transform: uppercase;
-      letter-spacing: 0.02em;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 11px 12px;
-      border: 1.5px solid var(--slate-300);
-      border-radius: var(--radius-sm);
-      font-size: 0.95rem;
-      color: var(--slate-900);
-      background-color: var(--white);
-      transition: border-color 0.2s, box-shadow 0.2s;
-      font-family: inherit;
-    }
-
-    input:focus, select:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
-    }
-
-    input[readonly] {
-      background-color: var(--slate-50);
-    }
-
-    /* Botones */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 12px 16px;
-      font-size: 0.92rem;
-      font-weight: 700;
-      border-radius: var(--radius-sm);
-      border: none;
-      cursor: pointer;
-      transition: transform 0.1s, background-color 0.2s;
-      text-align: center;
-      min-height: 46px;
-    }
-
-    .btn:active {
-      transform: scale(0.98);
-    }
-
-    .btn-primary {
-      background-color: var(--primary);
-      color: var(--white);
-      width: 100%;
-      box-shadow: 0 4px 10px rgba(6, 78, 59, 0.25);
-    }
-
-    .btn-primary:hover {
-      background-color: var(--primary-hover);
-    }
-
-    .btn-secondary {
-      background-color: var(--slate-800);
-      color: var(--white);
-    }
-
-    .btn-outline {
-      background-color: var(--white);
-      color: var(--slate-700);
-      border: 1.5px solid var(--slate-300);
-    }
-
-    .btn-danger-outline {
-      background-color: var(--danger-light);
-      color: var(--danger);
-      border: 1px solid #fecaca;
-    }
-
-    .btn-sm {
-      padding: 7px 11px;
-      font-size: 0.8rem;
-      min-height: 36px;
-    }
-
-    /* Lista de artículos en el Vale Actual */
-    .cart-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 12px;
-      background: var(--slate-50);
-      border: 1px solid var(--slate-200);
-      border-radius: var(--radius-sm);
-      margin-bottom: 8px;
-      gap: 10px;
-    }
-
-    .cart-item-info {
-      flex: 1;
-    }
-
-    .cart-item-title {
-      font-weight: 700;
-      font-size: 0.9rem;
-      color: var(--slate-900);
-    }
-
-    .cart-item-meta {
-      font-size: 0.78rem;
-      color: var(--slate-600);
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 3px 8px;
-      border-radius: 999px;
-      font-size: 0.72rem;
-      font-weight: 700;
-    }
-
-    .badge-green {
-      background: var(--primary-light);
-      color: var(--primary);
-      border: 1px solid #a7f3d0;
-    }
-
-    .badge-warning {
-      background: var(--warning-light);
-      color: var(--warning);
-      border: 1px solid #fde68a;
-    }
-
-    .badge-danger {
-      background: var(--danger-light);
-      color: var(--danger);
-      border: 1px solid #fecaca;
-    }
-
-    .badge-slate {
-      background: var(--slate-200);
-      color: var(--slate-700);
-    }
-
-    /* Inventario Items */
-    .stock-card {
-      background: var(--white);
-      border: 1px solid var(--slate-200);
-      border-radius: var(--radius);
-      padding: 13px;
-      margin-bottom: 10px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    }
-
-    .stock-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .stock-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-top: 9px;
-      border-top: 1px dashed var(--slate-200);
-      gap: 8px;
-    }
-
-    .qty-stepper {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .step-btn {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      border: 1px solid var(--slate-300);
-      background: var(--slate-50);
-      font-weight: 800;
-      font-size: 1.1rem;
-      color: var(--slate-800);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .step-btn:active {
-      background: var(--slate-200);
-    }
-
-    /* Barra de Navegación Inferior Fija */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: var(--nav-height);
-      background: var(--white);
-      border-top: 1px solid var(--slate-200);
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      z-index: 50;
-      box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.08);
-    }
-
+    .nav-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 14px; padding-bottom: 4px; }
     .nav-btn {
-      background: none;
-      border: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      color: var(--slate-500);
-      font-size: 0.72rem;
-      font-weight: 600;
-      cursor: pointer;
-      position: relative;
-      transition: color 0.15s;
+      border: 1px solid var(--border); background: #fff; color: var(--text);
+      padding: 9px 13px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; white-space: nowrap;
     }
+    .nav-btn.active { background: var(--cfe-green); color: #fff; border-color: var(--cfe-green); }
 
-    .nav-btn.active {
-      color: var(--primary);
-      font-weight: 800;
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: var(--muted); text-transform: uppercase; }
+    input, select, textarea {
+      width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 14px; background: #fff;
     }
+    textarea { min-height: 70px; resize: vertical; }
 
-    .nav-btn.active::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 22%;
-      right: 22%;
-      height: 3px;
-      background: var(--primary);
-      border-radius: 0 0 4px 4px;
+    .btn {
+      border: none; border-radius: 7px; padding: 10px 14px; font-size: 14px; font-weight: bold;
+      cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     }
+    .btn-green { background: var(--cfe-green); color: #fff; }
+    .btn-green:hover { background: var(--cfe-green-dark); }
+    .btn-blue { background: var(--primary); color: #fff; }
+    .btn-red { background: var(--danger); color: #fff; padding: 6px 10px; font-size: 12px; }
+    .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.6); color: #fff; padding: 6px 10px; font-size: 12px; }
 
-    /* Toast / Notificación Flotante (Reemplaza alert()) */
-    .toast-container {
-      position: fixed;
-      top: 72px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 100;
-      width: 92%;
-      max-width: 440px;
-      pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+    th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
+    th { background: var(--cfe-green-light); color: var(--cfe-green-dark); font-weight: bold; }
+    tr.low-stock { background: var(--danger-bg); color: var(--danger); font-weight: bold; }
+    .alert-banner {
+      background: var(--danger-bg); border: 1px solid #ef9a9a; color: var(--danger);
+      padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; font-weight: bold;
     }
-
-    .toast {
-      background: var(--slate-900);
-      color: var(--white);
-      padding: 12px 16px;
-      border-radius: 10px;
-      font-size: 0.88rem;
-      font-weight: 600;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.22);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      animation: slideDown 0.22s ease-out;
-    }
-
-    .toast.error { background: var(--danger); }
-    .toast.success { background: var(--primary); }
-
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-12px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Modal General y Modal de Vista Previa PDF */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.72);
-      z-index: 90;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 12px;
-      overflow-y: auto;
-    }
-
-    .modal-backdrop.open {
-      display: flex;
-    }
-
-    .modal-box {
-      background: var(--white);
-      width: 100%;
-      max-width: 680px;
-      border-radius: var(--radius);
-      max-height: 92vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    }
-
-    .modal-toolbar {
-      background: var(--slate-800);
-      color: var(--white);
-      padding: 12px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .modal-body {
-      padding: 16px;
-      overflow-y: auto;
-      background: #e2e8f0;
-    }
-
-    /* ==========================================================================
-       HOJA DEL VALE DE ENTREGA (DISEÑO PROFESIONAL PARA IMPRESIÓN / PDF)
-       ========================================================================== */
-    .vale-sheet {
-      background: #ffffff;
-      color: #000000;
-      padding: 24px 26px;
-      border: 1.5px solid #000000;
-      max-width: 100%;
-      margin: 0 auto;
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
-    .vale-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 2px solid #000000;
-      padding-bottom: 12px;
-      margin-bottom: 14px;
-      gap: 12px;
-    }
-
-    .vale-title-block h2 {
-      font-size: 16px;
-      font-weight: 900;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-
-    .vale-title-block p {
-      font-size: 11px;
-      color: #333333;
-    }
-
-    .vale-folio-box {
-      border: 1.5px solid #000000;
-      padding: 6px 12px;
-      text-align: right;
-      min-width: 135px;
-    }
-
-    .vale-folio-box .label {
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: #444;
-    }
-
-    .vale-folio-box .folio-num {
-      font-size: 15px;
-      font-weight: 900;
-      color: #000;
-    }
-
-    .vale-meta-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      border: 1.5px solid #000000;
-      margin-bottom: 14px;
-      font-size: 12px;
-    }
-
-    .vale-meta-cell {
-      padding: 7px 10px;
-      border-bottom: 1px solid #000000;
-      border-right: 1px solid #000000;
-    }
-
-    .vale-meta-cell:nth-child(2n) {
-      border-right: none;
-    }
-
-    .vale-meta-cell.no-bottom {
-      border-bottom: none;
-    }
-
-    .vale-meta-label {
-      font-size: 9.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: #333333;
-      display: block;
-      margin-bottom: 2px;
-    }
-
-    .vale-meta-val {
-      font-size: 13px;
-      font-weight: 700;
-      color: #000000;
-    }
-
-    .vale-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 18px;
-      font-size: 12px;
-    }
-
-    .vale-table th, .vale-table td {
-      border: 1.5px solid #000000;
-      padding: 7px 9px;
-      text-align: left;
-    }
-
-    .vale-table th {
-      background-color: #f1f5f9;
-      font-weight: 800;
-      text-transform: uppercase;
-      font-size: 11px;
-    }
-
-    .vale-table td.num, .vale-table th.num {
-      text-align: center;
-      width: 65px;
-    }
-
-    .vale-table td.unit, .vale-table th.unit {
-      text-align: center;
-      width: 75px;
-    }
-
-    .vale-obs {
-      font-size: 11px;
-      border: 1px solid #000000;
-      padding: 7px 10px;
-      margin-bottom: 36px;
-      min-height: 36px;
-    }
-
-    .vale-signatures {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 32px;
-      margin-top: 38px;
-      padding-top: 10px;
-    }
-
-    .sig-box {
-      text-align: center;
-      font-size: 11px;
-    }
-
-    .sig-line {
-      border-top: 1.5px solid #000000;
-      margin-bottom: 6px;
-      height: 1px;
-    }
-
-    .sig-role {
-      font-weight: 800;
-      text-transform: uppercase;
-      font-size: 10.5px;
-      margin-bottom: 3px;
-    }
-
-    .sig-details {
-      font-size: 11px;
-      line-height: 1.35;
-    }
-
-    .vale-footer-note {
-      margin-top: 20px;
-      padding-top: 8px;
-      border-top: 1px dashed #666;
-      font-size: 9.5px;
-      color: #444;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 28px 16px;
-      color: var(--slate-500);
-      font-size: 0.9rem;
-    }
-
-    /* ==========================================================================
-       ESTILOS EXCLUSIVOS DE IMPRESIÓN / GENERACIÓN DE PDF (@media print)
-       ========================================================================== */
-    @media print {
-      body * {
-        visibility: hidden;
-      }
-      #printModal, #printModal * {
-        visibility: visible;
-      }
-      body {
-        background: #ffffff !important;
-        padding: 0 !important;
-        margin: 0 !important;
-      }
-      #printModal {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        background: #ffffff !important;
-        padding: 0 !important;
-        display: block !important;
-      }
-      .modal-box {
-        box-shadow: none !important;
-        max-height: none !important;
-        max-width: 100% !important;
-        border-radius: 0 !important;
-      }
-      .modal-toolbar, .no-print {
-        display: none !important;
-      }
-      .modal-body {
-        padding: 0 !important;
-        background: #ffffff !important;
-        overflow: visible !important;
-      }
-      .vale-sheet {
-        border: 1.5px solid #000000 !important;
-        padding: 18px !important;
-        width: 100% !important;
-      }
-    }
+    .status-msg { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
-
-  <!-- Notificaciones Toast -->
-  <div id="toastContainer" class="toast-container no-print"></div>
-
-  <!-- Banner de Alertas en Tiempo Real (Entradas / Salidas del Técnico) -->
-  <div id="liveAlertContainer" class="no-print"></div>
-
-  <!-- Cabecera Principal -->
-  <header class="app-header no-print">
-    <div class="header-title-wrap">
-      <div class="header-icon" style="background: #ffffff; padding: 5px 8px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
-        <!-- Logotipo institucional estilo CFE Bodega -->
-        <svg width="58" height="28" viewBox="0 0 120 56" xmlns="http://www.w3.org/2000/svg">
-          <rect x="1" y="1" width="118" height="54" rx="7" fill="#006847" stroke="#004d35" stroke-width="2"/>
-          <path d="M16 44 L23 12 L30 44 M18 33 L28 33 M20 23 L26 23" stroke="#a7f3d0" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          <polygon points="24,10 19,26 24,26 21,42 30,22 25,22" fill="#facc15"/>
-          <text x="38" y="31" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="23" fill="#ffffff" letter-spacing="1">CFE</text>
-          <text x="39" y="45" font-family="Arial, sans-serif" font-weight="800" font-size="10.5" fill="#a7f3d0" letter-spacing="1.5">BODEGA</text>
-        </svg>
-      </div>
+<div class="container">
+  <header>
+    <div class="brand">
+      <div class="brand-badge">⚡</div>
       <div>
-        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-          <h1>CFE Bodega</h1>
-          <span id="roleBadge" class="role-pill" onclick="openRoleModal()" title="Cambiar perfil">👑 ADMIN</span>
-        </div>
-        <p id="headerStatusText">Modo Offline Listo • 100% Local</p>
+        <h1>CFE BODEGA</h1>
+        <p>Comisión Federal de Electricidad · Zona Altos / Área Yahualica</p>
       </div>
     </div>
-    <button type="button" class="btn-download-app" onclick="openInstallHelperModal()" title="Guardar o instalar app en el celular">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-        <polyline points="7 10 12 15 17 10"></polyline>
-        <line x1="12" y1="15" x2="12" y2="3"></line>
-      </svg>
-      Instalar / Compartir
-    </button>
+    <div class="session-box" id="session-bar">
+      <span class="pill" id="lbl-usuario">Sin sesión</span>
+      <button class="btn btn-outline hidden" id="btn-sync" onclick="cargarTodo()">🔄 Sincronizar</button>
+      <button class="btn btn-outline hidden" id="btn-logout" onclick="cerrarSesion()">Salir</button>
+    </div>
   </header>
 
-  <main class="container no-print">
+  <!-- PANTALLA DE LOGIN -->
+  <div class="card" id="login-view" style="max-width: 440px; margin: 24px auto;">
+    <h2>Iniciar Sesión</h2>
+    <div class="form-group">
+      <label>RP</label>
+      <input type="text" id="login-rp" placeholder="Ej. 9A123" autocomplete="username" />
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="Tu contraseña" autocomplete="current-password" />
+    </div>
+    <button class="btn btn-green" style="width:100%" onclick="iniciarSesion()">Entrar al Sistema</button>
+    <p class="status-msg" id="login-status"></p>
+  </div>
 
-    <!-- ========================================================================
-         PESTAÑA 1: ENTREGA RÁPIDA Y GENERACIÓN DE VALE PDF
-         ======================================================================== -->
-    <section id="tab-entrega" class="tab-section active">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#064e3b" stroke-width="2.3"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-            1. Datos de Quien Recibe
-          </div>
-          <span class="badge badge-green" id="nextFolioBadge">VALE-001</span>
-        </div>
+  <!-- APP PRINCIPAL -->
+  <div id="app-view" class="hidden">
+    <div class="nav-tabs">
+      <button class="nav-btn active" data-tab="stock" onclick="cambiarTab('stock')">📦 Stock y Faltantes</button>
+      <button class="nav-btn" data-tab="entrada" onclick="cambiarTab('entrada')">📥 Entrada a Bodega</button>
+      <button class="nav-btn" data-tab="salida" onclick="cambiarTab('salida')">📤 Salida / Vale PDF</button>
+      <button class="nav-btn" data-tab="movimientos" onclick="cambiarTab('movimientos')">📋 Movimientos</button>
+      <button class="nav-btn hidden" id="tab-perfiles" data-tab="perfiles" onclick="cambiarTab('perfiles')">👥 Perfiles</button>
+    </div>
 
-        <div class="form-grid form-grid-2">
+    <!-- 1. STOCK Y FALTANTES -->
+    <section class="card" id="tab-stock">
+      <h2>Inventario en Bodega y Materiales Faltantes</h2>
+      <div id="alerta-faltantes" class="alert-banner hidden"></div>
+
+      <div id="admin-material-form" class="hidden">
+        <h3>Agregar Nuevo Material al Catálogo</h3>
+        <div class="grid-3">
           <div class="form-group">
-            <label for="deliveryDate">Fecha de Entrega</label>
-            <input type="date" id="deliveryDate">
+            <label>Código</label>
+            <input type="text" id="mat-codigo" placeholder="Ej. MAT-001" />
           </div>
-
           <div class="form-group">
-            <label for="crewSelect">Seleccionar Cuadrilla</label>
-            <select id="crewSelect" onchange="handleCrewSelection()">
-              <option value="">-- Seleccionar cuadrilla --</option>
+            <label>Descripción</label>
+            <input type="text" id="mat-desc" placeholder="Ej. Conductor ACSR 2/0" />
+          </div>
+          <div class="form-group">
+            <label>Cantidad Inicial</label>
+            <input type="number" id="mat-cant" min="0" step="any" value="0" />
+          </div>
+          <div class="form-group">
+            <label>Unidad de Medida</label>
+            <select id="mat-unidad">
+              <option value="Piezas">Piezas</option>
+              <option value="Metro">Metro</option>
+              <option value="Kilogramos">Kilogramos</option>
             </select>
           </div>
-        </div>
-
-        <div class="form-grid form-grid-2" style="margin-top: 12px;">
           <div class="form-group">
-            <label for="receiverName">Nombre del Compañero</label>
-            <input type="text" id="receiverName" placeholder="Ej. Magdiel...">
-          </div>
-
-          <div class="form-group">
-            <label for="receiverRpe">RPE / RP</label>
-            <input type="text" id="receiverRpe" placeholder="Ej. 9A8B7" style="text-transform: uppercase;">
+            <label>Stock Mínimo</label>
+            <input type="number" id="mat-min" min="0" step="any" value="0" />
           </div>
         </div>
-
-        <div class="form-group" style="margin-top: 12px;">
-          <label for="deliveryNotes">Observaciones / Orden o Circuito (Opcional)</label>
-          <input type="text" id="deliveryNotes" placeholder="Ej. Mantenimiento circuito Yahualica Centro">
-        </div>
+        <button class="btn btn-green" onclick="agregarMaterial()">Guardar Material</button>
       </div>
 
-      <!-- Selección de Material a Entregar -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#064e3b" stroke-width="2.3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            2. Agregar Material al Vale
-          </div>
-        </div>
-
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="materialSearchInput">Buscar Material en Bodega</label>
-            <input type="text" id="materialSearchInput" placeholder="Escribe nombre o código para filtrar..." oninput="filterDeliveryMaterialSelect()">
-          </div>
-
-          <div class="form-grid form-grid-3">
-            <div class="form-group">
-              <label for="materialSelect">Material Disponible</label>
-              <select id="materialSelect"></select>
-            </div>
-
-            <div class="form-group">
-              <label for="deliveryQty">Cantidad</label>
-              <input type="number" id="deliveryQty" min="1" step="any" value="1">
-            </div>
-
-            <div class="form-group" style="justify-content: flex-end;">
-              <label style="visibility: hidden;">Agregar</label>
-              <button type="button" class="btn btn-secondary" onclick="addItemToCart()">
-                + Agregar
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Lista de materiales agregados al vale actual -->
-        <div style="margin-top: 16px;">
-          <label style="display:block; margin-bottom: 8px;">Materiales en este Vale (<span id="cartCount">0</span>)</label>
-          <div id="cartListContainer">
-            <div class="empty-state" style="padding: 16px; background: var(--slate-50); border-radius: 8px;">
-              Aún no agregas materiales a esta entrega.
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top: 16px;">
-          <button type="button" class="btn btn-primary" onclick="finalizeDeliveryAndGeneratePdf()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-            Registrar Entrega y Generar Vale PDF
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================================================================
-         PESTAÑA 2: BODEGA (INVENTARIO EN TIEMPO REAL)
-         ======================================================================== -->
-    <section id="tab-bodega" class="tab-section">
-      <div class="card">
-        <div class="card-header" style="flex-wrap: wrap; gap: 8px;">
-          <div class="card-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#064e3b" stroke-width="2.3"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-            Existencias en Bodega
-          </div>
-          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <button type="button" class="btn btn-tech-entry btn-sm" style="width: auto;" onclick="openStockEntryModal()">
-              📥 Ingresar a Almacén
-            </button>
-            <button type="button" id="btnNewMaterialAdmin" class="btn btn-primary btn-sm" style="width: auto;" onclick="openMaterialModal()">
-              + Nuevo Material
-            </button>
-          </div>
-        </div>
-
-        <div class="form-grid form-grid-2">
-          <div class="form-group">
-            <input type="text" id="inventorySearch" placeholder="Buscar por nombre o código..." oninput="renderInventory()">
-          </div>
-          <div class="form-group">
-            <select id="inventoryFilter" onchange="renderInventory()">
-              <option value="all">Mostrar: Todo el inventario</option>
-              <option value="low">Solo bajo stock o agotado</option>
-              <option value="available">Solo con existencia (&gt; 0)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div id="inventoryListContainer"></div>
-
-      <!-- Respaldo y Exportación -->
-      <div class="card" id="backupAdminCard" style="margin-top: 16px;">
-        <div class="card-header">
-          <div class="card-title">Respaldo de Datos (Offline)</div>
-        </div>
-        <p style="font-size: 0.8rem; color: var(--slate-600); margin-bottom: 12px;">
-          Tus datos se guardan automáticamente en este dispositivo. Puedes exportar tu inventario a Excel (CSV) o guardar una copia completa de seguridad.
-        </p>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-          <button type="button" class="btn btn-outline btn-sm" onclick="exportInventoryCSV()">Exportar Excel (CSV)</button>
-          <button type="button" class="btn btn-outline btn-sm" onclick="exportBackupJSON()">Respaldar Todo (JSON)</button>
-          <label class="btn btn-outline btn-sm" style="cursor: pointer; margin: 0;">
-            Restaurar Respaldo
-            <input type="file" accept=".json" style="display: none;" onchange="importBackupJSON(event)">
-          </label>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================================================================
-         PESTAÑA 3: CUADRILLAS Y COMPAÑEROS (CATÁLOGO)
-         ======================================================================== -->
-    <section id="tab-cuadrillas" class="tab-section">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#064e3b" stroke-width="2.3"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            Catálogo de Cuadrillas y RP
-          </div>
-          <button type="button" id="btnNewCrewAdmin" class="btn btn-primary btn-sm" style="width: auto;" onclick="openCrewModal()">
-            + Nueva Cuadrilla
-          </button>
-        </div>
-        <p style="font-size: 0.82rem; color: var(--slate-600);">
-          Registra aquí tus cuadrillas y responsables. Al elegir una cuadrilla en la pestaña "Entrega", su nombre y RP se llenarán en automático.
-        </p>
-      </div>
-
-      <div id="crewsListContainer"></div>
-    </section>
-
-    <!-- ========================================================================
-         PESTAÑA 4: HISTORIAL DE VALES ENTREGADOS
-         ======================================================================== -->
-    <section id="tab-historial" class="tab-section">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#064e3b" stroke-width="2.3"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            Historial de Vales Entregados
-          </div>
-          <span class="badge badge-slate" id="historyTotalBadge">0 vales</span>
-        </div>
-        <div class="form-group">
-          <input type="text" id="historySearch" placeholder="Buscar por folio, cuadrilla, nombre o RP..." oninput="renderHistory()">
-        </div>
-      </div>
-
-      <div id="historyListContainer"></div>
-    </section>
-
-    <!-- ========================================================================
-         PESTAÑA 5: SINCRONIZACIÓN WI-FI, ROLES Y BITÁCORA DE ALERTAS
-         ======================================================================== -->
-    <section id="tab-sync" class="tab-section">
-      <!-- Perfil Activo y Seguridad -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#064e3b" stroke-width="2.3"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            Perfil de Usuario y Permisos
-          </div>
-          <button type="button" class="btn btn-outline btn-sm" onclick="openRoleModal()">Cambiar Rol</button>
-        </div>
-
-        <div id="roleDescriptionBox" style="font-size: 0.84rem; color: var(--slate-700); background: var(--slate-50); padding: 11px; border-radius: 8px; border: 1px solid var(--slate-200);">
-        </div>
-
-        <div id="adminPinConfigBox" style="margin-top: 12px; display: none;">
-          <div class="form-grid form-grid-2">
-            <div class="form-group">
-              <label for="techNameConfig">Nombre de tu Técnico</label>
-              <input type="text" id="techNameConfig" placeholder="Ej. Técnico Auxiliar">
-            </div>
-            <div class="form-group">
-              <label for="adminPinConfig">PIN de Administrador (4 dígitos)</label>
-              <input type="password" id="adminPinConfig" maxlength="6" placeholder="Ej. 1234">
-            </div>
-          </div>
-          <button type="button" class="btn btn-secondary btn-sm" style="margin-top: 10px; width: 100%;" onclick="saveAdminProfileSettings()">
-            Guardar Configuración de Perfil
-          </button>
-        </div>
-      </div>
-
-      <!-- Conexión Wi-Fi / Nube entre Administrador y Técnico -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#064e3b" stroke-width="2.3"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
-            Conexión Wi-Fi / Sincronización
-          </div>
-          <span class="badge badge-slate" id="syncBadgeStatus">Local (Sin Nube)</span>
-        </div>
-
-        <p style="font-size: 0.8rem; color: var(--slate-600); margin-bottom: 12px;">
-          Conecta ambos celulares mediante una URL gratuita de <strong>Firebase Realtime Database</strong> y un <strong>Código de Bodega</strong> compartido. Cuando haya Wi-Fi o datos, todo se actualizará solo y recibirás alertas al instante.
-        </p>
-
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="syncRoomCode">Código Único de Bodega (Ej. YAHUALICA-BODEGA-01)</label>
-            <input type="text" id="syncRoomCode" placeholder="YAHUALICA-BODEGA-01" style="text-transform: uppercase;">
-          </div>
-          <div class="form-group">
-            <label for="syncFirebaseUrl">URL de Base de Datos Firebase (Opcional para Nube en vivo)</label>
-            <input type="url" id="syncFirebaseUrl" placeholder="https://tu-proyecto-default-rtdb.firebaseio.com">
-          </div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button type="button" class="btn btn-primary btn-sm" style="flex: 2;" onclick="saveSyncSettings()">
-              Conectar y Sincronizar Ahora
-            </button>
-            <button type="button" class="btn btn-outline btn-sm" style="flex: 1;" onclick="forceManualSync()">
-              ↻ Actualizar
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bitácora de Alertas de Entradas y Salidas -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            🔔 Alertas de Movimientos en Bodega
-          </div>
-          <button type="button" class="btn btn-outline btn-sm" onclick="clearActivityLog()">Limpiar</button>
-        </div>
-        <div id="activityLogContainer"></div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- ==========================================================================
-       NAVEGACIÓN INFERIOR FIJA (MOBILE-FIRST)
-       ========================================================================== -->
-  <nav class="bottom-nav no-print">
-    <button type="button" class="nav-btn active" data-tab="entrega" onclick="switchTab('entrega')">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-      <span>Entrega</span>
-    </button>
-
-    <button type="button" class="nav-btn" data-tab="bodega" onclick="switchTab('bodega')">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-      <span>Bodega</span>
-    </button>
-
-    <button type="button" class="nav-btn" data-tab="cuadrillas" onclick="switchTab('cuadrillas')">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-      <span>Cuadrillas</span>
-    </button>
-
-    <button type="button" class="nav-btn" data-tab="historial" onclick="switchTab('historial')">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-      <span>Historial</span>
-    </button>
-
-    <button type="button" class="nav-btn" data-tab="sync" onclick="switchTab('sync')">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
-      <span>Red/Rol</span>
-    </button>
-  </nav>
-
-  <!-- ==========================================================================
-       MODAL: INGRESAR MATERIAL AL ALMACÉN (PARA TÉCNICO Y ADMIN)
-       ========================================================================== -->
-  <div id="stockEntryModal" class="modal-backdrop no-print">
-    <div class="modal-box" style="max-width: 480px;">
-      <div class="modal-toolbar" style="background: #0284c7;">
-        <strong>📥 Registrar Entrada a Bodega</strong>
-        <button type="button" class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: white;" onclick="closeModal('stockEntryModal')">✕</button>
-      </div>
-      <div class="modal-body" style="background: var(--white);">
-        <form onsubmit="submitStockEntry(event)">
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="entryMaterialSelect">Seleccionar Material que Ingresa *</label>
-              <select id="entryMaterialSelect" required></select>
-            </div>
-            <div class="form-group">
-              <label for="entryQtyInput">Cantidad que Ingresa al Almacén *</label>
-              <input type="number" id="entryQtyInput" required min="0.01" step="any" value="1">
-            </div>
-            <div class="form-group">
-              <label for="entryNoteInput">Referencia / Remisión / Nota (Opcional)</label>
-              <input type="text" id="entryNoteInput" placeholder="Ej. Surtido semanal almacén central">
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 8px;">
-              <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeModal('stockEntryModal')">Cancelar</button>
-              <button type="submit" class="btn btn-tech-entry" style="flex: 2;">Confirmar Ingreso</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==========================================================================
-       MODAL: CAMBIAR ROL (ADMINISTRADOR vs TÉCNICO)
-       ========================================================================== -->
-  <div id="roleModal" class="modal-backdrop no-print">
-    <div class="modal-box" style="max-width: 420px;">
-      <div class="modal-toolbar">
-        <strong>Seleccionar Perfil de Acceso</strong>
-        <button type="button" class="btn btn-sm" style="background: rgba(255,255,255,0.15); color: white;" onclick="closeModal('roleModal')">✕</button>
-      </div>
-      <div class="modal-body" style="background: var(--white);">
-        <div class="form-grid">
-          <div style="padding: 12px; border: 1.5px solid var(--slate-200); border-radius: 10px;">
-            <div style="font-weight: 800; margin-bottom: 4px;">🔧 Modo Técnico</div>
-            <p style="font-size: 0.8rem; color: var(--slate-600); margin-bottom: 10px;">
-              Puede entregar vales PDF e ingresar material nuevo al almacén. No puede editar ni borrar inventario.
-            </p>
-            <button type="button" class="btn btn-tech-entry btn-sm" style="width: 100%;" onclick="activateTechRole()">
-              Entrar como Técnico
-            </button>
-          </div>
-
-          <div style="padding: 12px; border: 1.5px solid var(--primary); border-radius: 10px; background: var(--primary-light);">
-            <div style="font-weight: 800; color: var(--primary); margin-bottom: 4px;">👑 Modo Administrador</div>
-            <p style="font-size: 0.8rem; color: var(--slate-700); margin-bottom: 8px;">
-              Control total: crear/editar/borrar materiales, ajustar existencias y recibir alertas de movimientos.
-            </p>
-            <div class="form-group" style="margin-bottom: 8px;">
-              <input type="password" id="loginAdminPinInput" placeholder="Ingresa PIN de Admin (Por defecto: 1234)">
-            </div>
-            <button type="button" class="btn btn-primary btn-sm" style="width: 100%;" onclick="activateAdminRole()">
-              Entrar como Administrador
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==========================================================================
-       MODAL: AGREGAR / EDITAR MATERIAL EN BODEGA
-       ========================================================================== -->
-  <div id="materialModal" class="modal-backdrop no-print">
-    <div class="modal-box" style="max-width: 480px;">
-      <div class="modal-toolbar">
-        <strong id="materialModalTitle">Nuevo Material en Bodega</strong>
-        <button type="button" class="btn btn-sm" style="background: rgba(255,255,255,0.15); color: white;" onclick="closeModal('materialModal')">✕</button>
-      </div>
-      <div class="modal-body" style="background: var(--white);">
-        <form id="materialForm" onsubmit="saveMaterial(event)">
-          <input type="hidden" id="matId">
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="matCode">Código / Clave (Opcional)</label>
-              <input type="text" id="matCode" placeholder="Ej. CON-014">
-            </div>
-            <div class="form-group">
-              <label for="matName">Descripción del Material *</label>
-              <input type="text" id="matName" required placeholder="Ej. Conector bimetálico 1/0 - 2/0">
-            </div>
-            <div class="form-grid form-grid-3">
-              <div class="form-group">
-                <label for="matUnit">Unidad *</label>
-                <select id="matUnit">
-                  <option value="PZA">PZA</option>
-                  <option value="TRAMO">TRAMO</option>
-                  <option value="METRO">METRO</option>
-                  <option value="JGO">JGO</option>
-                  <option value="KG">KG</option>
-                  <option value="ROLLO">ROLLO</option>
-                  <option value="PAR">PAR</option>
-                  <option value="CAJA">CAJA</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="matStock">Existencia *</label>
-                <input type="number" id="matStock" required min="0" step="any" value="10">
-              </div>
-              <div class="form-group">
-                <label for="matMin">Stock Mín.</label>
-                <input type="number" id="matMin" min="0" step="any" value="3">
-              </div>
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 8px;">
-              <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeModal('materialModal')">Cancelar</button>
-              <button type="submit" class="btn btn-primary" style="flex: 2;">Guardar Material</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==========================================================================
-       MODAL: AGREGAR / EDITAR CUADRILLA
-       ========================================================================== -->
-  <div id="crewModal" class="modal-backdrop no-print">
-    <div class="modal-box" style="max-width: 460px;">
-      <div class="modal-toolbar">
-        <strong id="crewModalTitle">Nueva Cuadrilla</strong>
-        <button type="button" class="btn btn-sm" style="background: rgba(255,255,255,0.15); color: white;" onclick="closeModal('crewModal')">✕</button>
-      </div>
-      <div class="modal-body" style="background: var(--white);">
-        <form id="crewForm" onsubmit="saveCrew(event)">
-          <input type="hidden" id="crewId">
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="crewTitle">Nombre de Cuadrilla *</label>
-              <input type="text" id="crewTitle" required placeholder="Ej. YAHUALICA 1" style="text-transform: uppercase;">
-            </div>
-            <div class="form-group">
-              <label for="crewPerson">Nombre Completo del Responsable *</label>
-              <input type="text" id="crewPerson" required placeholder="Ej. Magdiel...">
-            </div>
-            <div class="form-group">
-              <label for="crewRpe">RPE / RP *</label>
-              <input type="text" id="crewRpe" required placeholder="Ej. 9J4K2" style="text-transform: uppercase;">
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 8px;">
-              <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeModal('crewModal')">Cancelar</button>
-              <button type="submit" class="btn btn-primary" style="flex: 2;">Guardar Cuadrilla</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==========================================================================
-       MODAL: VISTA PREVIA DEL VALE DE ENTREGA E IMPRESIÓN PDF
-       ========================================================================== -->
-  <div id="printModal" class="modal-backdrop">
-    <div class="modal-box">
-      <div class="modal-toolbar no-print">
-        <strong style="font-size: 0.92rem;">Vista Previa Vale PDF</strong>
-        <div style="display: flex; gap: 8px;">
-          <button type="button" class="btn btn-sm" style="background: #10b981; color: #064e3b;" onclick="triggerPrintPdf()">
-            🖨️ Imprimir / Guardar PDF
-          </button>
-          <button type="button" class="btn btn-sm" style="background: rgba(255,255,255,0.18); color: white;" onclick="closeModal('printModal')">
-            Cerrar
-          </button>
-        </div>
-      </div>
-
-      <div class="modal-body">
-        <!-- Hoja oficial lista para imprimir o guardar como PDF -->
-        <div id="valePrintableArea" class="vale-sheet"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==========================================================================
-       MODAL: ASISTENTE DE DESCARGA E INSTALACIÓN EN CELULAR
-       ========================================================================== -->
-  <div id="installHelperModal" class="modal-backdrop no-print">
-    <div class="modal-box" style="max-width: 480px;">
-      <div class="modal-toolbar">
-        <strong>📲 Guardar App en tu Celular</strong>
-        <button type="button" class="btn btn-sm" style="background: rgba(255,255,255,0.18); color: white;" onclick="closeModal('installHelperModal')">✕</button>
-      </div>
-      <div class="modal-body" style="background: var(--white);">
-        <div class="form-grid">
-          <div style="padding: 12px; border: 1.5px solid var(--primary); border-radius: 10px; background: var(--primary-light);">
-            <div style="font-weight: 800; color: var(--primary); margin-bottom: 6px;">📲 Forma 1: Descargar directo desde Gemini (Recomendado)</div>
-            <p style="font-size: 0.82rem; color: var(--slate-800); line-height: 1.5;">
-              En la parte superior de esta ventana (arriba de la vista previa, junto a la pestaña <strong>Código / Preview</strong>), toca el ícono de <strong>Descargar (⬇️)</strong> o los <strong>3 puntitos (⋮) → Descargar</strong>. Eso guardará el archivo <code>bodega_vales_offline.html</code> directo en tus Descargas sin abrir Google.
-            </p>
-          </div>
-
-          <div style="padding: 12px; border: 1.5px solid var(--slate-300); border-radius: 10px;">
-            <div style="font-weight: 800; color: var(--slate-800); margin-bottom: 4px;">📋 Forma 2: Copiar Código para WhatsApp o Bloc de Notas</div>
-            <p style="font-size: 0.8rem; color: var(--slate-600); margin-bottom: 10px;">
-              Toca este botón para copiar toda la aplicación a tu portapapeles. Puedes enviárselo por WhatsApp a tu técnico o guardarlo en un archivo llamado <code>CFE_Bodega.html</code>.
-            </p>
-            <button type="button" class="btn btn-secondary btn-sm" style="width: 100%;" onclick="copyFullAppCode()">
-              📋 Copiar Código Completo de la App
-            </button>
-            <textarea id="hiddenCodeCopyArea" style="position:fixed; left:-9999px; top:0;" readonly></textarea>
-          </div>
-
-          <div style="padding: 10px 12px; background: var(--slate-100); border-radius: 8px; font-size: 0.78rem; color: var(--slate-700);">
-            <strong>💡 Una vez descargado:</strong> Abre tu app de <strong>Archivos / Descargas</strong> en el celular, toca <code>bodega_vales_offline.html</code> y ábrelo con <strong>Chrome</strong>. Funcionará 100% sin internet.
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    /* ==========================================================================
-       ESTADO GLOBAL Y ALMACENAMIENTO LOCAL (100% OFFLINE + SYNC WI-FI)
-       ========================================================================== */
-    const STORAGE_KEY = 'bodega_vales_yahualica_v2';
-    const ROLE_KEY = 'bodega_vales_device_role_v2';
-    const SYNC_CFG_KEY = 'bodega_vales_sync_cfg_v2';
-
-    // Datos iniciales precargados para que pueda probarlo al instante
-    const defaultState = {
-      folioCounter: 1,
-      bodegaPerson: 'Encargado de Bodega',
-      adminPin: '1234',
-      techName: 'Técnico de Bodega',
-      lastUpdated: Date.now(),
-      activityLog: [],
-      materials: [
-        { id: 'm1', code: 'CON-102', name: 'Conector bimetálico 1/0 - 2/0', unit: 'PZA', stock: 10, minStock: 3 },
-        { id: 'm2', code: 'AIS-013', name: 'Aislador de suspensión polimérico 13.8 kV', unit: 'PZA', stock: 18, minStock: 5 },
-        { id: 'm3', code: 'CAB-336', name: 'Cable ACSR calibre 3/0', unit: 'METRO', stock: 150, minStock: 30 },
-        { id: 'm4', code: 'FUS-015', name: 'Eslabón fusible 15 Amp tipo K', unit: 'PZA', stock: 25, minStock: 6 },
-        { id: 'm5', code: 'CIN-3M', name: 'Cinta aislante de vinil alta resistencia', unit: 'PZA', stock: 12, minStock: 4 },
-        { id: 'm6', code: 'HER-004', name: 'Abrazadera tipo U galvanizada', unit: 'JGO', stock: 8, minStock: 3 }
-      ],
-      crews: [
-        { id: 'c1', crewName: 'YAHUALICA 1', personName: 'Magdiel', rpe: '9Y1M4' },
-        { id: 'c2', crewName: 'YAHUALICA 2', personName: 'Carlos Hernández', rpe: '9Y2C8' },
-        { id: 'c3', crewName: 'GUARDIA NOCTURNA', personName: 'Roberto Jiménez', rpe: '9G5R1' }
-      ],
-      deliveries: []
-    };
-
-    let appState = loadState();
-    let currentRole = localStorage.getItem(ROLE_KEY) || 'admin'; // 'admin' | 'tech'
-    let syncConfig = loadSyncConfig();
-    let pendingCloudPush = false;
-    let seenActivityIds = new Set((appState.activityLog || []).map(a => a.id));
-    let currentCart = []; // Artículos seleccionados para el vale actual
-
-    function loadSyncConfig() {
-      try {
-        return JSON.parse(localStorage.getItem(SYNC_CFG_KEY)) || { roomCode: 'YAHUALICA-BODEGA-01', firebaseUrl: '' };
-      } catch (e) {
-        return { roomCode: 'YAHUALICA-BODEGA-01', firebaseUrl: '' };
-      }
-    }
-
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultState));
-          return JSON.parse(JSON.stringify(defaultState));
-        }
-        const parsed = JSON.parse(raw);
-        if (!parsed.activityLog) parsed.activityLog = [];
-        if (!parsed.adminPin) parsed.adminPin = '1234';
-        if (!parsed.techName) parsed.techName = 'Técnico de Bodega';
-        return parsed;
-      } catch (e) {
-        console.error('Error leyendo almacenamiento local:', e);
-        return JSON.parse(JSON.stringify(defaultState));
-      }
-    }
-
-    function saveState(pushToCloud = true) {
-      try {
-        appState.lastUpdated = Date.now();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-        if (pushToCloud) {
-          pendingCloudPush = true;
-          syncWithCloud('push');
-        }
-      } catch (e) {
-        showToast('Error al guardar en memoria del dispositivo', 'error');
-      }
-    }
-
-    /* ==========================================================================
-       INICIALIZACIÓN Y BUCLE DE SINCRONIZACIÓN WI-FI
-       ========================================================================== */
-    window.addEventListener('DOMContentLoaded', () => {
-      setTodayDate();
-      applyRolePermissions();
-      loadSyncInputs();
-      refreshAllViews();
-      updateOnlineIndicator();
-
-      window.addEventListener('online', () => {
-        updateOnlineIndicator();
-        if (pendingCloudPush) syncWithCloud('push');
-        else syncWithCloud('pull');
-      });
-      window.addEventListener('offline', updateOnlineIndicator);
-
-      // Revisar cambios en la nube cada 6 segundos cuando hay Wi-Fi / Internet
-      setInterval(() => {
-        if (navigator.onLine && syncConfig.firebaseUrl) {
-          if (pendingCloudPush) syncWithCloud('push');
-          else syncWithCloud('pull');
-        }
-      }, 6000);
-    });
-
-    function updateOnlineIndicator() {
-      const el = document.getElementById('headerStatusText');
-      const syncBadge = document.getElementById('syncBadgeStatus');
-      const hasCloud = Boolean(syncConfig.firebaseUrl && syncConfig.roomCode);
-
-      if (navigator.onLine) {
-        el.textContent = hasCloud
-          ? `Wi-Fi Activo • Sincronizado (${syncConfig.roomCode})`
-          : 'En línea • Datos guardados localmente';
-        if (syncBadge) {
-          syncBadge.textContent = hasCloud ? 'Conectado Wi-Fi' : 'Solo Local';
-          syncBadge.className = hasCloud ? 'badge badge-green' : 'badge badge-slate';
-        }
-      } else {
-        el.textContent = 'Sin Internet (Offline) • Guardando en teléfono';
-        if (syncBadge) {
-          syncBadge.textContent = 'Sin Wi-Fi (Offline)';
-          syncBadge.className = 'badge badge-warning';
-        }
-      }
-    }
-
-    function saveState() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-      } catch (e) {
-        showToast('Error al guardar en memoria del dispositivo', 'error');
-      }
-    }
-
-    /* ==========================================================================
-       INICIALIZACIÓN
-       ========================================================================== */
-    window.addEventListener('DOMContentLoaded', () => {
-      setTodayDate();
-      refreshAllViews();
-      updateOnlineIndicator();
-      window.addEventListener('online', updateOnlineIndicator);
-      window.addEventListener('offline', updateOnlineIndicator);
-    });
-
-    function updateOnlineIndicator() {
-      const el = document.getElementById('headerStatusText');
-      if (navigator.onLine) {
-        el.textContent = 'En línea • Datos guardados localmente';
-      } else {
-        el.textContent = 'Sin Internet (Offline) • Funcionando al 100%';
-      }
-    }
-
-    function setTodayDate() {
-      const dateInput = document.getElementById('deliveryDate');
-      const now = new Date();
-      const offset = now.getTimezoneOffset();
-      const localDate = new Date(now.getTime() - (offset * 60 * 1000));
-      dateInput.value = localDate.toISOString().split('T')[0];
-    }
-
-    function formatFolio(num) {
-      return 'VALE-' + String(num).padStart(3, '0');
-    }
-
-    function formatReadableDate(isoDate) {
-      if (!isoDate) return '';
-      const parts = isoDate.split('-');
-      if (parts.length !== 3) return isoDate;
-      const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-      const mIdx = parseInt(parts[1], 10) - 1;
-      return `${parts[2]}/${months[mIdx] || parts[1]}/${parts[0]}`;
-    }
-
-    function showToast(message, type = 'normal') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.textContent = message;
-      container.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.25s';
-        setTimeout(() => toast.remove(), 250);
-      }, 2800);
-    }
-
-    /* ==========================================================================
-       NAVEGACIÓN ENTRE PESTAÑAS
-       ========================================================================== */
-    function switchTab(tabName) {
-      document.querySelectorAll('.tab-section').forEach(sec => sec.classList.remove('active'));
-      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-
-      document.getElementById('tab-' + tabName).classList.add('active');
-      document.querySelector(`.nav-btn[data-tab="${tabName}"]`).classList.add('active');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function refreshAllViews() {
-      document.getElementById('nextFolioBadge').textContent = formatFolio(appState.folioCounter);
-      applyRolePermissions();
-      populateCrewSelect();
-      filterDeliveryMaterialSelect();
-      renderCart();
-      renderInventory();
-      renderCrews();
-      renderHistory();
-      renderActivityLog();
-    }
-
-    /* ==========================================================================
-       GESTIÓN DE ROLES (ADMINISTRADOR vs TÉCNICO) Y ALERTAS
-       ========================================================================== */
-    function applyRolePermissions() {
-      const isAdmin = currentRole === 'admin';
-      const badge = document.getElementById('roleBadge');
-      const btnNewMat = document.getElementById('btnNewMaterialAdmin');
-      const btnNewCrew = document.getElementById('btnNewCrewAdmin');
-      const backupCard = document.getElementById('backupAdminCard');
-      const pinBox = document.getElementById('adminPinConfigBox');
-      const descBox = document.getElementById('roleDescriptionBox');
-
-      if (isAdmin) {
-        badge.textContent = '👑 ADMIN';
-        badge.classList.remove('tech');
-        if (btnNewMat) btnNewMat.style.display = 'inline-flex';
-        if (btnNewCrew) btnNewCrew.style.display = 'inline-flex';
-        if (backupCard) backupCard.style.display = 'block';
-        if (pinBox) pinBox.style.display = 'block';
-        if (descBox) {
-          descBox.innerHTML = '<strong>Perfil Actual: ADMINISTRADOR</strong><br>Tienes control total: puedes crear, editar y eliminar materiales, ajustar existencias manualmente, anular vales y recibir alertas de movimientos.';
-        }
-      } else {
-        badge.textContent = '🔧 TÉCNICO';
-        badge.classList.add('tech');
-        if (btnNewMat) btnNewMat.style.display = 'none';
-        if (btnNewCrew) btnNewCrew.style.display = 'none';
-        if (backupCard) backupCard.style.display = 'none';
-        if (pinBox) pinBox.style.display = 'none';
-        if (descBox) {
-          descBox.innerHTML = `<strong>Perfil Actual: TÉCNICO (${escapeHtml(appState.techName)})</strong><br>Permisos habilitados: <strong>Entregar Vales PDF</strong> e <strong>Ingresar material al almacén</strong>. Las modificaciones o borrados de inventario están bloqueados para el Administrador.`;
-        }
-      }
-    }
-
-    function openRoleModal() {
-      document.getElementById('loginAdminPinInput').value = '';
-      openModal('roleModal');
-    }
-
-    function activateTechRole() {
-      currentRole = 'tech';
-      localStorage.setItem(ROLE_KEY, 'tech');
-      closeModal('roleModal');
-      refreshAllViews();
-      showToast('Modo Técnico activado (Solo entregas e ingresos)', 'normal');
-    }
-
-    function activateAdminRole() {
-      const pin = document.getElementById('loginAdminPinInput').value.trim();
-      const validPin = appState.adminPin || '1234';
-      if (pin !== validPin) {
-        showToast('PIN de Administrador incorrecto', 'error');
-        return;
-      }
-      currentRole = 'admin';
-      localStorage.setItem(ROLE_KEY, 'admin');
-      closeModal('roleModal');
-      refreshAllViews();
-      showToast('Modo Administrador activado', 'success');
-    }
-
-    function saveAdminProfileSettings() {
-      if (currentRole !== 'admin') return;
-      const tName = document.getElementById('techNameConfig').value.trim();
-      const newPin = document.getElementById('adminPinConfig').value.trim();
-      if (tName) appState.techName = tName;
-      if (newPin && newPin.length >= 4) appState.adminPin = newPin;
-      saveState();
-      refreshAllViews();
-      showToast('Configuración de Administrador guardada', 'success');
-    }
-
-    function recordMovementAlert(type, message, actorRole) {
-      const entry = {
-        id: 'act_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-        type: type, // 'IN' (Ingreso a almacén) | 'OUT' (Entrega de material)
-        message: message,
-        actor: actorRole === 'tech' ? (appState.techName || 'Técnico') : 'Administrador',
-        timestamp: new Date().toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
-      };
-      appState.activityLog.unshift(entry);
-      if (appState.activityLog.length > 40) appState.activityLog.length = 40;
-      seenActivityIds.add(entry.id);
-
-      // Si es el administrador, mostrar alerta visual inmediata
-      if (currentRole === 'admin') {
-        showLiveAlertBanner(entry);
-      }
-    }
-
-    function showLiveAlertBanner(entry) {
-      const container = document.getElementById('liveAlertContainer');
-      const isEntry = entry.type === 'IN';
-      const banner = document.createElement('div');
-      banner.className = `alert-banner ${isEntry ? 'entry' : ''}`;
-      banner.innerHTML = `
-        <div>
-          <div style="font-size:0.7rem; opacity:0.9; text-transform:uppercase;">
-            ${isEntry ? '📥 ALERTA: INGRESO A ALMACÉN' : '📤 ALERTA: ENTREGA DE MATERIAL'} • ${escapeHtml(entry.actor)}
-          </div>
-          <div>${escapeHtml(entry.message)}</div>
-        </div>
-        <button type="button" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:5px 9px; border-radius:6px; font-weight:800; cursor:pointer;" onclick="this.parentElement.remove()">OK</button>
-      `;
-      container.prepend(banner);
-    }
-
-    function renderActivityLog() {
-      const container = document.getElementById('activityLogContainer');
-      if (!container) return;
-      if (!appState.activityLog || appState.activityLog.length === 0) {
-        container.innerHTML = `<div class="empty-state" style="padding:14px;">Sin alertas recientes de entradas o salidas.</div>`;
-        return;
-      }
-
-      container.innerHTML = appState.activityLog.map(a => {
-        const isEntry = a.type === 'IN';
-        return `
-          <div style="padding: 9px 11px; border-left: 4px solid ${isEntry ? '#059669' : '#d97706'}; background: var(--slate-50); border-radius: 6px; margin-bottom: 8px;">
-            <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--slate-500); font-weight:700;">
-              <span>${isEntry ? '📥 INGRESO' : '📤 ENTREGA'} • ${escapeHtml(a.actor)}</span>
-              <span>${escapeHtml(a.timestamp)}</span>
-            </div>
-            <div style="font-size:0.84rem; font-weight:700; color:var(--slate-900); margin-top:2px;">
-              ${escapeHtml(a.message)}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function clearActivityLog() {
-      if (currentRole !== 'admin') {
-        showToast('Solo el Administrador puede limpiar la bitácora', 'error');
-        return;
-      }
-      appState.activityLog = [];
-      saveState();
-      renderActivityLog();
-    }
-
-    /* ==========================================================================
-       MODAL INGRESO A ALMACÉN (DISPONIBLE PARA TÉCNICO Y ADMIN)
-       ========================================================================== */
-    function openStockEntryModal() {
-      const select = document.getElementById('entryMaterialSelect');
-      select.innerHTML = '';
-      if (appState.materials.length === 0) {
-        showToast('No hay materiales dados de alta en el catálogo', 'error');
-        return;
-      }
-      appState.materials.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.id;
-        opt.textContent = `${m.code ? '[' + m.code + '] ' : ''}${m.name} (Actual: ${m.stock} ${m.unit})`;
-        select.appendChild(opt);
-      });
-      document.getElementById('entryQtyInput').value = 1;
-      document.getElementById('entryNoteInput').value = '';
-      openModal('stockEntryModal');
-    }
-
-    function submitStockEntry(e) {
-      e.preventDefault();
-      const matId = document.getElementById('entryMaterialSelect').value;
-      const qty = parseFloat(document.getElementById('entryQtyInput').value);
-      const note = document.getElementById('entryNoteInput').value.trim();
-
-      if (!matId || isNaN(qty) || qty <= 0) {
-        showToast('Ingresa una cantidad válida mayor a 0', 'error');
-        return;
-      }
-
-      const mat = appState.materials.find(m => m.id === matId);
-      if (!mat) return;
-
-      mat.stock = Number((mat.stock + qty).toFixed(4));
-      const alertText = `Ingresaron ${qty} ${mat.unit} de "${mat.name}" (Total en bodega: ${mat.stock})${note ? ' — ' + note : ''}`;
-      recordMovementAlert('IN', alertText, currentRole);
-
-      saveState();
-      closeModal('stockEntryModal');
-      refreshAllViews();
-      showToast(`Ingreso registrado: +${qty} ${mat.unit} de ${mat.name}`, 'success');
-    }
-
-    /* ==========================================================================
-       MOTOR DE SINCRONIZACIÓN WI-FI (FIREBASE REALTIME DATABASE REST)
-       ========================================================================== */
-    function loadSyncInputs() {
-      const roomEl = document.getElementById('syncRoomCode');
-      const urlEl = document.getElementById('syncFirebaseUrl');
-      const techEl = document.getElementById('techNameConfig');
-      const pinEl = document.getElementById('adminPinConfig');
-      if (roomEl) roomEl.value = syncConfig.roomCode || 'YAHUALICA-BODEGA-01';
-      if (urlEl) urlEl.value = syncConfig.firebaseUrl || '';
-      if (techEl) techEl.value = appState.techName || 'Técnico de Bodega';
-      if (pinEl) pinEl.value = appState.adminPin || '1234';
-    }
-
-    function saveSyncSettings() {
-      const room = document.getElementById('syncRoomCode').value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
-      let url = document.getElementById('syncFirebaseUrl').value.trim();
-      if (url.endsWith('/')) url = url.slice(0, -1);
-
-      syncConfig = {
-        roomCode: room || 'YAHUALICA-BODEGA-01',
-        firebaseUrl: url
-      };
-      localStorage.setItem(SYNC_CFG_KEY, JSON.stringify(syncConfig));
-      updateOnlineIndicator();
-
-      if (!url) {
-        showToast('Guardado en modo local. Agrega la URL de Firebase para sincronizar entre celulares.', 'normal');
-        return;
-      }
-
-      syncWithCloud('pull');
-    }
-
-    function forceManualSync() {
-      if (!syncConfig.firebaseUrl) {
-        showToast('Configura primero la URL de Firebase arriba', 'error');
-        return;
-      }
-      if (!navigator.onLine) {
-        showToast('Sin conexión Wi-Fi/Datos en este momento', 'error');
-        return;
-      }
-      syncWithCloud(pendingCloudPush ? 'push' : 'pull', true);
-    }
-
-    async function syncWithCloud(mode = 'pull', notifyUser = false) {
-      if (!syncConfig.firebaseUrl || !syncConfig.roomCode || !navigator.onLine) return;
-      const endpoint = `${syncConfig.firebaseUrl}/bodegas/${syncConfig.roomCode}.json`;
-
-      try {
-        if (mode === 'push') {
-          const res = await fetch(endpoint, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(appState)
-          });
-          if (res.ok) {
-            pendingCloudPush = false;
-            if (notifyUser) showToast('Datos enviados a la nube con éxito', 'success');
-          }
-        } else {
-          const res = await fetch(endpoint);
-          if (!res.ok) return;
-          const remoteData = await res.json();
-
-          if (!remoteData) {
-            // Si la sala en la nube está vacía, subimos nuestro estado inicial
-            await syncWithCloud('push', notifyUser);
-            return;
-          }
-
-          if (remoteData.lastUpdated && remoteData.lastUpdated > (appState.lastUpdated || 0)) {
-            // Detectar nuevas alertas generadas por el técnico u otro dispositivo
-            if (Array.isArray(remoteData.activityLog)) {
-              remoteData.activityLog.forEach(act => {
-                if (!seenActivityIds.has(act.id)) {
-                  seenActivityIds.add(act.id);
-                  if (currentRole === 'admin') {
-                    showLiveAlertBanner(act);
-                  }
-                }
-              });
-            }
-
-            appState = remoteData;
-            if (!appState.activityLog) appState.activityLog = [];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-            refreshAllViews();
-            if (notifyUser) showToast('Inventario actualizado desde Wi-Fi', 'success');
-          } else if (notifyUser) {
-            showToast('Ya tienes la información más reciente', 'normal');
-          }
-        }
-      } catch (err) {
-        console.warn('Error de sincronización:', err);
-        if (notifyUser) showToast('No se pudo conectar con el servidor de nube', 'error');
-      }
-    }
-
-    function filterDeliveryMaterialSelect() {
-      const query = document.getElementById('materialSearchInput').value.toLowerCase().trim();
-      const select = document.getElementById('materialSelect');
-      select.innerHTML = '';
-
-      const available = appState.materials.filter(m => {
-        const matches = m.name.toLowerCase().includes(query) || (m.code && m.code.toLowerCase().includes(query));
-        return matches;
-      });
-
-      if (available.length === 0) {
-        const opt = document.createElement('option');
-        opt.value = '';
-        opt.textContent = 'Sin coincidencias en bodega';
-        select.appendChild(opt);
-        return;
-      }
-
-      available.forEach(m => {
-        // Calcular existencia real descontando lo que ya está en el carrito actual
-        const inCart = currentCart.find(item => item.materialId === m.id);
-        const reserved = inCart ? inCart.qty : 0;
-        const realAvail = Math.max(0, m.stock - reserved);
-
-        const opt = document.createElement('option');
-        opt.value = m.id;
-        const codePrefix = m.code ? `[${m.code}] ` : '';
-        opt.textContent = `${codePrefix}${m.name} — Disp: ${realAvail} ${m.unit}`;
-        if (realAvail <= 0) opt.disabled = true;
-        select.appendChild(opt);
-      });
-    }
-
-    function addItemToCart() {
-      const matId = document.getElementById('materialSelect').value;
-      const qtyInput = document.getElementById('deliveryQty');
-      const qty = parseFloat(qtyInput.value);
-
-      if (!matId) {
-        showToast('Selecciona un material válido', 'error');
-        return;
-      }
-      if (isNaN(qty) || qty <= 0) {
-        showToast('Ingresa una cantidad mayor a 0', 'error');
-        return;
-      }
-
-      const material = appState.materials.find(m => m.id === matId);
-      if (!material) return;
-
-      const existingItem = currentCart.find(item => item.materialId === matId);
-      const alreadyAdded = existingItem ? existingItem.qty : 0;
-
-      if (alreadyAdded + qty > material.stock) {
-        showToast(`Stock insuficiente. Solo hay ${material.stock} ${material.unit} en bodega.`, 'error');
-        return;
-      }
-
-      if (existingItem) {
-        existingItem.qty += qty;
-      } else {
-        currentCart.push({
-          materialId: material.id,
-          code: material.code || '',
-          name: material.name,
-          unit: material.unit,
-          qty: qty
-        });
-      }
-
-      qtyInput.value = 1;
-      document.getElementById('materialSearchInput').value = '';
-      filterDeliveryMaterialSelect();
-      renderCart();
-      showToast(`Agregado: ${qty} ${material.unit} de ${material.name}`, 'success');
-    }
-
-    function removeCartItem(index) {
-      currentCart.splice(index, 1);
-      filterDeliveryMaterialSelect();
-      renderCart();
-    }
-
-    function renderCart() {
-      const container = document.getElementById('cartListContainer');
-      document.getElementById('cartCount').textContent = currentCart.length;
-
-      if (currentCart.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state" style="padding: 16px; background: var(--slate-50); border-radius: 8px;">
-            Aún no agregas materiales a esta entrega.
-          </div>`;
-        return;
-      }
-
-      container.innerHTML = currentCart.map((item, idx) => `
-        <div class="cart-item">
-          <div class="cart-item-info">
-            <div class="cart-item-title">${escapeHtml(item.name)}</div>
-            <div class="cart-item-meta">
-              ${item.code ? `Clave: <strong>${escapeHtml(item.code)}</strong> • ` : ''}
-              Cantidad: <strong>${item.qty} ${escapeHtml(item.unit)}</strong>
-            </div>
-          </div>
-          <button type="button" class="btn btn-danger-outline btn-sm" onclick="removeCartItem(${idx})" title="Quitar">
-            ✕
-          </button>
-        </div>
-      `).join('');
-    }
-
-    function finalizeDeliveryAndGeneratePdf() {
-      const date = document.getElementById('deliveryDate').value;
-      const crewSelectEl = document.getElementById('crewSelect');
-      const crewId = crewSelectEl.value;
-      const receiverName = document.getElementById('receiverName').value.trim();
-      const receiverRpe = document.getElementById('receiverRpe').value.trim().toUpperCase();
-      const notes = document.getElementById('deliveryNotes').value.trim();
-
-      if (!date) {
-        showToast('Selecciona la fecha de entrega', 'error');
-        return;
-      }
-      if (!receiverName) {
-        showToast('Ingresa el nombre de quien recibe el material', 'error');
-        return;
-      }
-      if (!receiverRpe) {
-        showToast('Ingresa el RPE / RP del compañero', 'error');
-        return;
-      }
-      if (currentCart.length === 0) {
-        showToast('Agrega al menos un material para generar el vale', 'error');
-        return;
-      }
-
-      // Verificar existencias finales antes de descontar
-      for (const item of currentCart) {
-        const mat = appState.materials.find(m => m.id === item.materialId);
-        if (!mat || mat.stock < item.qty) {
-          showToast(`No hay suficiente existencia de "${item.name}"`, 'error');
-          return;
-        }
-      }
-
-      // 1. Descontar del inventario
-      for (const item of currentCart) {
-        const mat = appState.materials.find(m => m.id === item.materialId);
-        mat.stock = Number((mat.stock - item.qty).toFixed(4));
-      }
-
-      // Determinar nombre de cuadrilla
-      let crewLabel = 'PERSONAL / MANUAL';
-      if (crewId && crewId !== 'MANUAL') {
-        const foundCrew = appState.crews.find(c => c.id === crewId);
-        if (foundCrew) crewLabel = foundCrew.crewName;
-      }
-
-      // 2. Registrar en historial
-      const folio = formatFolio(appState.folioCounter++);
-      const deliveryRecord = {
-        id: 'del_' + Date.now(),
-        folio: folio,
-        date: date,
-        crewName: crewLabel,
-        receiverName: receiverName,
-        receiverRpe: receiverRpe,
-        notes: notes,
-        items: JSON.parse(JSON.stringify(currentCart)),
-        createdAt: new Date().toISOString()
-      };
-
-      const itemsSummary = currentCart.map(i => `${i.qty} ${i.unit} de ${i.name}`).join(', ');
-      recordMovementAlert('OUT', `Se entregaron ${itemsSummary} a ${crewLabel} (${receiverName}) — ${folio}`, currentRole);
-
-      appState.deliveries.unshift(deliveryRecord);
-      saveState();
-
-      // Limpiar carrito y notas
-      currentCart = [];
-      document.getElementById('deliveryNotes').value = '';
-      refreshAllViews();
-
-      // 3. Abrir vista previa del Vale PDF al instante
-      showToast(`Vale ${folio} registrado y stock descontado`, 'success');
-      openValePreview(deliveryRecord.id);
-    }
-
-    /* ==========================================================================
-       VISTA PREVIA DEL VALE E IMPRESIÓN / PDF
-       ========================================================================== */
-    function openValePreview(deliveryId) {
-      const record = appState.deliveries.find(d => d.id === deliveryId);
-      if (!record) return;
-
-      const rowsHtml = record.items.map((item, idx) => `
-        <tr>
-          <td class="num">${idx + 1}</td>
-          <td class="num"><strong>${item.qty}</strong></td>
-          <td class="unit">${escapeHtml(item.unit)}</td>
-          <td>${item.code ? `<strong>[${escapeHtml(item.code)}]</strong> ` : ''}${escapeHtml(item.name)}</td>
-        </tr>
-      `).join('');
-
-      const html = `
-        <div class="vale-header">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <svg width="74" height="36" viewBox="0 0 120 56" xmlns="http://www.w3.org/2000/svg">
-              <rect x="1" y="1" width="118" height="54" rx="6" fill="#006847" stroke="#000000" stroke-width="2"/>
-              <path d="M16 44 L23 12 L30 44 M18 33 L28 33 M20 23 L26 23" stroke="#ffffff" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-              <text x="38" y="31" font-family="Arial Black, sans-serif" font-weight="900" font-size="23" fill="#ffffff" letter-spacing="1">CFE</text>
-              <text x="39" y="45" font-family="Arial, sans-serif" font-weight="800" font-size="10.5" fill="#ffffff" letter-spacing="1.5">BODEGA</text>
-            </svg>
-            <div class="vale-title-block">
-              <h2>VALE DE SALIDA Y ENTREGA DE MATERIAL</h2>
-              <p>COMISIÓN FEDERAL DE ELECTRICIDAD • CONTROL DE BODEGA</p>
-            </div>
-          </div>
-          <div class="vale-folio-box">
-            <div class="label">Folio de Control</div>
-            <div class="folio-num">${escapeHtml(record.folio)}</div>
-          </div>
-        </div>
-
-        <div class="vale-meta-grid">
-          <div class="vale-meta-cell">
-            <span class="vale-meta-label">Cuadrilla / Área Destino</span>
-            <span class="vale-meta-val">${escapeHtml(record.crewName)}</span>
-          </div>
-          <div class="vale-meta-cell">
-            <span class="vale-meta-label">Fecha de Entrega</span>
-            <span class="vale-meta-val">${formatReadableDate(record.date)}</span>
-          </div>
-          <div class="vale-meta-cell no-bottom">
-            <span class="vale-meta-label">Recibe (Nombre del Compañero)</span>
-            <span class="vale-meta-val">${escapeHtml(record.receiverName)}</span>
-          </div>
-          <div class="vale-meta-cell no-bottom">
-            <span class="vale-meta-label">RPE / RP del Receptor</span>
-            <span class="vale-meta-val">${escapeHtml(record.receiverRpe)}</span>
-          </div>
-        </div>
-
-        <table class="vale-table">
+      <h3>Existencias Actuales (en rojo: igual o por debajo del mínimo)</h3>
+      <div class="table-wrap">
+        <table>
           <thead>
             <tr>
-              <th class="num">#</th>
-              <th class="num">Cant.</th>
-              <th class="unit">Unidad</th>
-              <th>Descripción del Material / Herramienta</th>
+              <th>Código</th>
+              <th>Descripción</th>
+              <th>Unidad</th>
+              <th>Stock Actual</th>
+              <th>Mínimo</th>
+              <th>Estatus</th>
+              <th class="col-admin-only hidden">Ajustar Mínimo</th>
             </tr>
           </thead>
-          <tbody>
-            ${rowsHtml}
-          </tbody>
+          <tbody id="tbody-stock"></tbody>
         </table>
+      </div>
+    </section>
 
-        <div class="vale-obs">
-          <strong>Observaciones / Trabajo:</strong> ${record.notes ? escapeHtml(record.notes) : 'Entrega de material de bodega para trabajos operativos.'}
+    <!-- 2. ENTRADA A BODEGA -->
+    <section class="card hidden" id="tab-entrada">
+      <h2>Registrar Entrada de Material a Bodega</h2>
+      <div class="grid-3">
+        <div class="form-group">
+          <label>Material</label>
+          <select id="ent-material"></select>
         </div>
-
-        <div class="vale-signatures">
-          <div class="sig-box">
-            <div class="sig-line"></div>
-            <div class="sig-role">ENTREGA (BODEGA)</div>
-            <div class="sig-details">
-              Nombre y Firma de Quien Entrega<br>
-              RPE / RP: ______________________
-            </div>
-          </div>
-
-          <div class="sig-box">
-            <div class="sig-line"></div>
-            <div class="sig-role">RECIBE DE CONFORMIDAD</div>
-            <div class="sig-details">
-              <strong>${escapeHtml(record.receiverName)}</strong><br>
-              RP: <strong>${escapeHtml(record.receiverRpe)}</strong> • ${escapeHtml(record.crewName)}
-            </div>
-          </div>
+        <div class="form-group">
+          <label>Cantidad Recibida</label>
+          <input type="number" id="ent-cant" min="0.01" step="any" value="1" />
         </div>
-
-        <div class="vale-footer-note">
-          <span>Documento generado en Control de Bodega</span>
-          <span>Folio: ${escapeHtml(record.folio)} • Fecha: ${record.date}</span>
+        <div class="form-group">
+          <label>Actividad</label>
+          <input type="text" id="ent-actividad" placeholder="Ej. Surtimiento de almacén / Mantenimiento" />
         </div>
+      </div>
+      <div class="form-group">
+        <label>Observaciones</label>
+        <textarea id="ent-obs" placeholder="Notas adicionales de la entrada..."></textarea>
+      </div>
+      <button class="btn btn-green" onclick="registrarEntrada()">Registrar Entrada y Generar Folio</button>
+      <p class="status-msg" id="ent-status"></p>
+    </section>
+
+    <!-- 3. SALIDA / VALE PDF -->
+    <section class="card hidden" id="tab-salida">
+      <h2>Generar Vale de Salida y Descargar PDF</h2>
+      <div class="grid-3">
+        <div class="form-group">
+          <label>Fecha</label>
+          <input type="date" id="sal-fecha" />
+        </div>
+        <div class="form-group">
+          <label>Cuadrilla</label>
+          <input type="text" id="sal-cuadrilla" placeholder="Ej. YAHUALICA 1" />
+        </div>
+        <div class="form-group">
+          <label>RP de Quien Recibe</label>
+          <input type="text" id="sal-rec-rp" placeholder="RP del compañero" />
+        </div>
+        <div class="form-group">
+          <label>Nombre de Quien Recibe</label>
+          <input type="text" id="sal-rec-nombre" placeholder="Nombre completo" />
+        </div>
+        <div class="form-group">
+          <label>Actividad</label>
+          <input type="text" id="sal-actividad" placeholder="Ej. Libranza / Cambio de transformador" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Observaciones</label>
+        <textarea id="sal-obs" placeholder="Observaciones del vale..."></textarea>
+      </div>
+
+      <h3>Agregar Materiales al Vale</h3>
+      <div class="grid-3">
+        <div class="form-group">
+          <label>Material</label>
+          <select id="sal-material"></select>
+        </div>
+        <div class="form-group">
+          <label>Cantidad a Entregar</label>
+          <input type="number" id="sal-cant" min="0.01" step="any" value="1" />
+        </div>
+        <div class="form-group" style="display:flex; align-items:flex-end;">
+          <button class="btn btn-green" style="width:100%" onclick="agregarItemSalida()">➕ Agregar al Vale</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Descripción</th>
+              <th>Unidad</th>
+              <th>Cantidad</th>
+              <th>Quitar</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-vale-draft"></tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:14px;">
+        <button class="btn btn-blue" onclick="registrarSalidaYPDF()">📄 Registrar Salida, Descontar Stock y Descargar PDF</button>
+      </div>
+      <p class="status-msg" id="sal-status"></p>
+    </section>
+
+    <!-- 4. MOVIMIENTOS -->
+    <section class="card hidden" id="tab-movimientos">
+      <h2>Historial Compartido de Movimientos (Entradas y Salidas)</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Folio</th>
+              <th>Tipo</th>
+              <th>Fecha</th>
+              <th>Registró (RP)</th>
+              <th>Cuadrilla / Receptor</th>
+              <th>Actividad</th>
+              <th>Observaciones</th>
+              <th>Detalle</th>
+              <th>PDF</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-movimientos"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 5. PERFILES (SOLO ADMIN) -->
+    <section class="card hidden" id="tab-perfiles">
+      <h2>Administración de Perfiles</h2>
+      <div class="grid-3">
+        <div class="form-group">
+          <label>RP</label>
+          <input type="text" id="perf-rp" placeholder="Ej. 9B456" />
+        </div>
+        <div class="form-group">
+          <label>Nombre</label>
+          <input type="text" id="perf-nombre" placeholder="Nombre del técnico o usuario" />
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="perf-pass" placeholder="Contraseña" />
+        </div>
+        <div class="form-group">
+          <label>Rol</label>
+          <select id="perf-rol">
+            <option value="tecnico">Técnico</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-green" onclick="crearPerfil()">Crear Perfil</button>
+
+      <h3>Perfiles Registrados</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>RP</th>
+              <th>Nombre</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-perfiles"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://smhjvpjtjivzpzuwoahc.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_W6OAZHsvc5pBSSmAXLGwhA_hFnloN1H";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let usuarioActual = null;
+  let materiales = [];
+  let movimientos = [];
+  let detallesMov = [];
+  let perfiles = [];
+  let valeDraft = [];
+
+  document.getElementById("sal-fecha").valueAsDate = new Date();
+
+  // Manifest PWA dinámico para soporte instalable en navegador
+  const manifestData = {
+    name: "CFE Bodega - Zona Altos / Área Yahualica",
+    short_name: "CFE Bodega",
+    start_url: ".",
+    display: "standalone",
+    background_color: "#f3f6f4",
+    theme_color: "#006837",
+    icons: [{
+      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23006837'/%3E%3Ctext x='50' y='66' font-size='52' text-anchor='middle' fill='white'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E",
+      sizes: "192x192",
+      type: "image/svg+xml"
+    }]
+  };
+  const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: "application/json" });
+  const manifestLink = document.createElement("link");
+  manifestLink.rel = "manifest";
+  manifestLink.href = URL.createObjectURL(manifestBlob);
+  document.head.appendChild(manifestLink);
+
+  async function iniciarSesion() {
+    const rp = document.getElementById("login-rp").value.trim();
+    const pass = document.getElementById("login-pass").value;
+    const statusEl = document.getElementById("login-status");
+    if (!rp || !pass) {
+      statusEl.textContent = "Ingresa tu RP y contraseña.";
+      return;
+    }
+    statusEl.textContent = "Verificando credenciales...";
+    const { data, error } = await sb
+      .from("perfiles")
+      .select("*")
+      .eq("rp", rp)
+      .eq("password", pass)
+      .eq("activo", true)
+      .maybeSingle();
+
+    if (error || !data) {
+      statusEl.textContent = "RP o contraseña incorrectos, o perfil inactivo.";
+      return;
+    }
+    usuarioActual = data;
+    statusEl.textContent = "";
+    document.getElementById("login-view").classList.add("hidden");
+    document.getElementById("app-view").classList.remove("hidden");
+    document.getElementById("btn-sync").classList.remove("hidden");
+    document.getElementById("btn-logout").classList.remove("hidden");
+    document.getElementById("lbl-usuario").textContent = ${data.nombre} (${data.rp}) · ${data.rol.toUpperCase()};
+
+    const esAdmin = data.rol === "admin";
+    document.getElementById("admin-material-form").classList.toggle("hidden", !esAdmin);
+    document.querySelectorAll(".col-admin-only").forEach(el => el.classList.toggle("hidden", !esAdmin));
+    document.getElementById("tab-perfiles").classList.toggle("hidden", !esAdmin);
+
+    await cargarTodo();
+  }
+
+  function cerrarSesion() {
+    usuarioActual = null;
+    valeDraft = [];
+    document.getElementById("app-view").classList.add("hidden");
+    document.getElementById("login-view").classList.remove("hidden");
+    document.getElementById("btn-sync").classList.add("hidden");
+    document.getElementById("btn-logout").classList.add("hidden");
+    document.getElementById("lbl-usuario").textContent = "Sin sesión";
+    document.getElementById("login-pass").value = "";
+  }
+
+  function cambiarTab(tabName) {
+    document.querySelectorAll("section.card").forEach(sec => sec.classList.add("hidden"));
+    document.getElementById("tab-" + tabName).classList.remove("hidden");
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.tab === tabName);
+    });
+  }
+
+  async function cargarTodo() {
+    const [matRes, movRes, detRes] = await Promise.all([
+      sb.from("materiales").select("*").order("codigo", { ascending: true }),
+      sb.from("movimientos").select("*").order("creado_en", { ascending: false }),
+      sb.from("movimiento_detalle").select("*")
+    ]);
+    if (!matRes.error) materiales = matRes.data || [];
+    if (!movRes.error) movimientos = movRes.data || [];
+    if (!detRes.error) detallesMov = detRes.data || [];
+
+    if (usuarioActual && usuarioActual.rol === "admin") {
+      const perfRes = await sb.from("perfiles").select("*").order("creado_en", { ascending: true });
+      if (!perfRes.error) perfiles = perfRes.data || [];
+      renderPerfiles();
+    }
+
+    renderStockYFaltantes();
+    renderSelectoresMateriales();
+    renderMovimientos();
+  }
+
+  function renderStockYFaltantes() {
+    const tbody = document.getElementById("tbody-stock");
+    const alerta = document.getElementById("alerta-faltantes");
+    const esAdmin = usuarioActual && usuarioActual.rol === "admin";
+    tbody.innerHTML = "";
+
+    const faltantes = materiales.filter(m => Number(m.stock_actual) <= Number(m.stock_minimo));
+    if (faltantes.length > 0) {
+      alerta.classList.remove("hidden");
+      alerta.textContent = `⚠️ Materiales que nos hacen falta (${faltantes.length}): ` +
+        faltantes.map(f => ${f.codigo} - ${f.descripcion} (${f.stock_actual}/${f.stock_minimo} ${f.unidad})).join(" | ");
+    } else {
+      alerta.classList.add("hidden");
+    }
+
+    materiales.forEach(m => {
+      const bajo = Number(m.stock_actual) <= Number(m.stock_minimo);
+      const tr = document.createElement("tr");
+      if (bajo) tr.classList.add("low-stock");
+      tr.innerHTML = `
+        <td>${m.codigo}</td>
+        <td>${m.descripcion}</td>
+        <td>${m.unidad}</td>
+        <td>${m.stock_actual}</td>
+        <td>${m.stock_minimo}</td>
+        <td>${bajo ? "FALTANTE / BAJO MÍNIMO" : "Disponible"}</td>
+        ${esAdmin ? <td><input type="number" min="0" step="any" value="${m.stock_minimo}" onchange="actualizarMinimo('${m.id}', this.value)" style="width:90px; padding:5px;" /></td> : ""}
       `;
+      tbody.appendChild(tr);
+    });
+  }
 
-      document.getElementById('valePrintableArea').innerHTML = html;
-      openModal('printModal');
+  async function actualizarMinimo(id, nuevoMin) {
+    if (!usuarioActual || usuarioActual.rol !== "admin") return;
+    const valor = Math.max(0, Number(nuevoMin) || 0);
+    const { error } = await sb.from("materiales").update({ stock_minimo: valor, actualizado_en: new Date().toISOString() }).eq("id", id);
+    if (!error) await cargarTodo();
+  }
+
+  async function agregarMaterial() {
+    if (!usuarioActual || usuarioActual.rol !== "admin") return;
+    const codigo = document.getElementById("mat-codigo").value.trim();
+    const descripcion = document.getElementById("mat-desc").value.trim();
+    const cantidad = Number(document.getElementById("mat-cant").value) || 0;
+    const unidad = document.getElementById("mat-unidad").value;
+    const minimo = Number(document.getElementById("mat-min").value) || 0;
+
+    if (!codigo || !descripcion) {
+      alert("Completa código y descripción.");
+      return;
     }
-
-    function triggerPrintPdf() {
-      window.print();
+    const { error } = await sb.from("materiales").insert({
+      codigo,
+      descripcion,
+      unidad,
+      stock_actual: cantidad,
+      stock_minimo: minimo
+    });
+    if (error) {
+      alert("Error al guardar material: " + error.message);
+      return;
     }
+    document.getElementById("mat-codigo").value = "";
+    document.getElementById("mat-desc").value = "";
+    document.getElementById("mat-cant").value = "0";
+    document.getElementById("mat-min").value = "0";
+    await cargarTodo();
+  }
 
-    /* ==========================================================================
-       PESTAÑA 2: GESTIÓN DE BODEGA (INVENTARIO)
-       ========================================================================== */
-    function renderInventory() {
-      const container = document.getElementById('inventoryListContainer');
-      const search = document.getElementById('inventorySearch').value.toLowerCase().trim();
-      const filter = document.getElementById('inventoryFilter').value;
+  function renderSelectoresMateriales() {
+    const selEnt = document.getElementById("ent-material");
+    const selSal = document.getElementById("sal-material");
+    selEnt.innerHTML = "";
+    selSal.innerHTML = "";
+    materiales.forEach(m => {
+      const opt = <option value="${m.id}">${m.codigo} - ${m.descripcion} (${m.stock_actual} ${m.unidad})</option>;
+      selEnt.innerHTML += opt;
+      selSal.innerHTML += opt;
+    });
+  }
 
-      const filtered = appState.materials.filter(m => {
-        const matchText = m.name.toLowerCase().includes(search) || (m.code && m.code.toLowerCase().includes(search));
-        if (!matchText) return false;
-        if (filter === 'low') return m.stock <= (m.minStock || 0);
-        if (filter === 'available') return m.stock > 0;
-        return true;
+  function siguienteFolio(tipo) {
+    const prefijo = tipo === "entrada" ? "ENT-" : "SAL-";
+    let maxNum = 0;
+    movimientos
+      .filter(m => m.tipo === tipo && m.folio && m.folio.startsWith(prefijo))
+      .forEach(m => {
+        const n = parseInt(m.folio.replace(prefijo, ""), 10);
+        if (!isNaN(n) && n > maxNum) maxNum = n;
       });
+    return prefijo + String(maxNum + 1).padStart(4, "0");
+  }
 
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="card empty-state">No se encontraron materiales con ese filtro.</div>`;
-        return;
+  async function registrarEntrada() {
+    const matId = document.getElementById("ent-material").value;
+    const cant = Number(document.getElementById("ent-cant").value);
+    const actividad = document.getElementById("ent-actividad").value.trim();
+    const observaciones = document.getElementById("ent-obs").value.trim();
+    const statusEl = document.getElementById("ent-status");
+
+    const mat = materiales.find(m => m.id === matId);
+    if (!mat || !cant || cant <= 0) {
+      statusEl.textContent = "Selecciona un material y una cantidad mayor a 0.";
+      return;
+    }
+
+    const folio = siguienteFolio("entrada");
+    const { data: movData, error: movErr } = await sb.from("movimientos").insert({
+      tipo: "entrada",
+      folio,
+      fecha: new Date().toISOString().slice(0, 10),
+      usuario_rp: usuarioActual.rp,
+      usuario_nombre: usuarioActual.nombre,
+      actividad,
+      observaciones
+    }).select().single();
+
+    if (movErr) {
+      statusEl.textContent = "Error al crear entrada: " + movErr.message;
+      return;
+    }
+
+    await sb.from("movimiento_detalle").insert({
+      movimiento_id: movData.id,
+      material_id: mat.id,
+      codigo: mat.codigo,
+      descripcion: mat.descripcion,
+      unidad: mat.unidad,
+      cantidad: cant
+    });
+
+    await sb.from("materiales").update({
+      stock_actual: Number(mat.stock_actual) + cant,
+      actualizado_en: new Date().toISOString()
+    }).eq("id", mat.id);
+
+    document.getElementById("ent-cant").value = "1";
+    document.getElementById("ent-actividad").value = "";
+    document.getElementById("ent-obs").value = "";
+    statusEl.textContent = Entrada registrada con folio ${folio}.;
+    await cargarTodo();
+  }
+
+  function agregarItemSalida() {
+    const matId = document.getElementById("sal-material").value;
+    const cant = Number(document.getElementById("sal-cant").value);
+    const mat = materiales.find(m => m.id === matId);
+    if (!mat || !cant || cant <= 0) {
+      alert("Selecciona material y cantidad válida.");
+      return;
+    }
+    if (cant > Number(mat.stock_actual)) {
+      alert(Stock insuficiente. Disponible: ${mat.stock_actual} ${mat.unidad});
+      return;
+    }
+    valeDraft.push({
+      material_id: mat.id,
+      codigo: mat.codigo,
+      descripcion: mat.descripcion,
+      unidad: mat.unidad,
+      cantidad: cant
+    });
+    renderValeDraft();
+  }
+
+  function renderValeDraft() {
+    const tbody = document.getElementById("tbody-vale-draft");
+    tbody.innerHTML = "";
+    valeDraft.forEach((item, idx) => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${item.codigo}</td>
+          <td>${item.descripcion}</td>
+          <td>${item.unidad}</td>
+          <td>${item.cantidad}</td>
+          <td><button class="btn btn-red" onclick="valeDraft.splice(${idx},1); renderValeDraft();">Quitar</button></td>
+        </tr>
+      `;
+    });
+  }
+
+  async function registrarSalidaYPDF() {
+    const statusEl = document.getElementById("sal-status");
+    const fecha = document.getElementById("sal-fecha").value || new Date().toISOString().slice(0, 10);
+    const cuadrilla = document.getElementById("sal-cuadrilla").value.trim();
+    const recRp = document.getElementById("sal-rec-rp").value.trim();
+    const recNombre = document.getElementById("sal-rec-nombre").value.trim();
+    const actividad = document.getElementById("sal-actividad").value.trim();
+    const observaciones = document.getElementById("sal-obs").value.trim();
+
+    if (valeDraft.length === 0) {
+      statusEl.textContent = "Agrega al menos un material al vale.";
+      return;
+    }
+    if (!recNombre) {
+      statusEl.textContent = "Indica el nombre de quien recibe.";
+      return;
+    }
+
+    const folio = siguienteFolio("salida");
+    const { data: movData, error: movErr } = await sb.from("movimientos").insert({
+      tipo: "salida",
+      folio,
+      fecha,
+      usuario_rp: usuarioActual.rp,
+      usuario_nombre: usuarioActual.nombre,
+      cuadrilla,
+      receptor_rp: recRp,
+      receptor_nombre: recNombre,
+      actividad,
+      observaciones
+    }).select().single();
+
+    if (movErr) {
+      statusEl.textContent = "Error al registrar salida: " + movErr.message;
+      return;
+    }
+
+    const filasDetalle = valeDraft.map(d => ({
+      movimiento_id: movData.id,
+      material_id: d.material_id,
+      codigo: d.codigo,
+      descripcion: d.descripcion,
+      unidad: d.unidad,
+      cantidad: d.cantidad
+    }));
+    await sb.from("movimiento_detalle").insert(filasDetalle);
+
+    for (const d of valeDraft) {
+      const mat = materiales.find(m => m.id === d.material_id);
+      if (mat) {
+        const nuevoStock = Math.max(0, Number(mat.stock_actual) - Number(d.cantidad));
+        await sb.from("materiales").update({
+          stock_actual: nuevoStock,
+          actualizado_en: new Date().toISOString()
+        }).eq("id", mat.id);
       }
-
-      const isAdmin = currentRole === 'admin';
-
-      container.innerHTML = filtered.map(m => {
-        let badgeClass = 'badge-green';
-        let statusText = `${m.stock} ${m.unit}`;
-        if (m.stock <= 0) {
-          badgeClass = 'badge-danger';
-          statusText = `AGOTADO (0 ${m.unit})`;
-        } else if (m.stock <= (m.minStock || 0)) {
-          badgeClass = 'badge-warning';
-          statusText = `Bajo: ${m.stock} ${m.unit}`;
-        }
-
-        const adminControls = isAdmin ? `
-          <div class="qty-stepper">
-            <button type="button" class="step-btn" onclick="adjustStock('${m.id}', -1)" title="Restar 1">−</button>
-            <span style="font-size: 0.85rem; font-weight: 700; min-width: 55px; text-align: center;">${m.stock} ${escapeHtml(m.unit)}</span>
-            <button type="button" class="step-btn" onclick="adjustStock('${m.id}', 1)" title="Sumar 1">+</button>
-          </div>
-          <div style="display: flex; gap: 6px;">
-            <button type="button" class="btn btn-outline btn-sm" onclick="openMaterialModal('${m.id}')">Editar</button>
-            <button type="button" class="btn btn-danger-outline btn-sm" onclick="deleteMaterial('${m.id}')">Borrar</button>
-          </div>
-        ` : `
-          <span style="font-size: 0.78rem; color: var(--slate-500); font-weight: 600;">
-            🔒 Edición bloqueada (Solo Admin)
-          </span>
-          <button type="button" class="btn btn-tech-entry btn-sm" onclick="openStockEntryModal()">
-            + Ingresar Stock
-          </button>
-        `;
-
-        return `
-          <div class="stock-card">
-            <div class="stock-top">
-              <div>
-                ${m.code ? `<span style="font-size:0.72rem; font-weight:700; color:var(--slate-500);">${escapeHtml(m.code)}</span>` : ''}
-                <div style="font-weight: 700; font-size: 0.95rem; color: var(--slate-900);">${escapeHtml(m.name)}</div>
-              </div>
-              <span class="badge ${badgeClass}">${statusText}</span>
-            </div>
-
-            <div class="stock-actions">
-              ${adminControls}
-            </div>
-          </div>
-        `;
-      }).join('');
     }
 
-    function adjustStock(id, delta) {
-      if (currentRole !== 'admin') {
-        showToast('Solo el Administrador puede ajustar existencias', 'error');
-        return;
-      }
-      const mat = appState.materials.find(m => m.id === id);
-      if (!mat) return;
-      const next = Number((mat.stock + delta).toFixed(4));
-      if (next < 0) return;
-      mat.stock = next;
-      saveState();
-      refreshAllViews();
+    descargarPDFVale(movData, filasDetalle);
+    valeDraft = [];
+    renderValeDraft();
+    document.getElementById("sal-cuadrilla").value = "";
+    document.getElementById("sal-rec-rp").value = "";
+    document.getElementById("sal-rec-nombre").value = "";
+    document.getElementById("sal-actividad").value = "";
+    document.getElementById("sal-obs").value = "";
+    statusEl.textContent = Vale ${folio} registrado y PDF descargado.;
+    await cargarTodo();
+  }
+
+  function descargarPDFVale(mov, items) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(14);
+    doc.setTextColor(0, 104, 55);
+    doc.text("COMISIÓN FEDERAL DE ELECTRICIDAD", 14, 18);
+    doc.setFontSize(11);
+    doc.setTextColor(30, 30, 30);
+    doc.text("Zona Altos / Área Yahualica · Vale de Salida de Material", 14, 25);
+
+    doc.setFontSize(10);
+    doc.text(Folio: ${mov.folio}, 14, 35);
+    doc.text(Fecha: ${mov.fecha}, 110, 35);
+    doc.text(Cuadrilla: ${mov.cuadrilla || "-"}, 14, 42);
+    doc.text(Receptor: ${mov.receptor_nombre || "-"} (RP: ${mov.receptor_rp || "-"}), 14, 49);
+    doc.text(Actividad: ${mov.actividad || "-"}, 14, 56);
+    doc.text(Observaciones: ${mov.observaciones || "-"}, 14, 63);
+
+    doc.autoTable({
+      startY: 70,
+      head: [["Código", "Descripción", "Unidad", "Cantidad"]],
+      body: items.map(i => [i.codigo, i.descripcion, i.unidad, String(i.cantidad)])
+    });
+
+    const yFirmas = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 120) + 28;
+    doc.line(14, yFirmas, 90, yFirmas);
+    doc.text(Entregó: ${mov.usuario_nombre} (${mov.usuario_rp}), 14, yFirmas + 6);
+
+    doc.line(115, yFirmas, 195, yFirmas);
+    doc.text(Recibió: ${mov.receptor_nombre || ""}, 115, yFirmas + 6);
+
+    doc.save(${mov.folio}_CFE_Yahualica.pdf);
+  }
+
+  function renderMovimientos() {
+    const tbody = document.getElementById("tbody-movimientos");
+    tbody.innerHTML = "";
+    movimientos.forEach(m => {
+      const items = detallesMov.filter(d => d.movimiento_id === m.id);
+      const resumenItems = items.map(i => ${i.cantidad} ${i.unidad} · ${i.codigo} (${i.descripcion})).join("<br>");
+      const receptorInfo = m.tipo === "salida" ? ${m.cuadrilla || ""} / ${m.receptor_nombre || ""} (${m.receptor_rp || ""}) : "Bodega";
+      const btnPdf = m.tipo === "salida"
+        ? <button class="btn btn-blue" style="padding:5px 8px; font-size:12px;" onclick='descargarPDFVale(${JSON.stringify(m).replace(/'/g, "&apos;")}, ${JSON.stringify(items).replace(/'/g, "&apos;")})'>PDF</button>
+        : "-";
+
+      tbody.innerHTML += `
+        <tr>
+          <td><strong>${m.folio}</strong></td>
+          <td>${m.tipo.toUpperCase()}</td>
+          <td>${m.fecha}</td>
+          <td>${m.usuario_nombre} (${m.usuario_rp})</td>
+          <td>${receptorInfo}</td>
+          <td>${m.actividad || "-"}</td>
+          <td>${m.observaciones || "-"}</td>
+          <td>${resumenItems || "-"}</td>
+          <td>${btnPdf}</td>
+        </tr>
+      `;
+    });
+  }
+
+  function renderPerfiles() {
+    const tbody = document.getElementById("tbody-perfiles");
+    tbody.innerHTML = "";
+    perfiles.forEach(p => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${p.rp}</td>
+          <td>${p.nombre}</td>
+          <td>${p.rol}</td>
+          <td>${p.activo ? "Activo" : "Inactivo"}</td>
+          <td><button class="btn btn-red" onclick="togglePerfil('${p.id}', ${!p.activo})">${p.activo ? "Desactivar" : "Activar"}</button></td>
+        </tr>
+      `;
+    });
+  }
+
+  async function crearPerfil() {
+    if (!usuarioActual || usuarioActual.rol !== "admin") return;
+    const rp = document.getElementById("perf-rp").value.trim();
+    const nombre = document.getElementById("perf-nombre").value.trim();
+    const password = document.getElementById("perf-pass").value;
+    const rol = document.getElementById("perf-rol").value;
+    if (!rp || !nombre || !password) {
+      alert("Completa RP, nombre y contraseña.");
+      return;
     }
-
-    function openMaterialModal(id = null) {
-      if (currentRole !== 'admin') {
-        showToast('Solo el Administrador puede crear o editar materiales', 'error');
-        return;
-      }
-      const form = document.getElementById('materialForm');
-      form.reset();
-      document.getElementById('matId').value = '';
-
-      if (id) {
-        const mat = appState.materials.find(m => m.id === id);
-        if (mat) {
-          document.getElementById('materialModalTitle').textContent = 'Editar Material';
-          document.getElementById('matId').value = mat.id;
-          document.getElementById('matCode').value = mat.code || '';
-          document.getElementById('matName').value = mat.name;
-          document.getElementById('matUnit').value = mat.unit;
-          document.getElementById('matStock').value = mat.stock;
-          document.getElementById('matMin').value = mat.minStock || 0;
-        }
-      } else {
-        document.getElementById('materialModalTitle').textContent = 'Nuevo Material en Bodega';
-      }
-
-      openModal('materialModal');
+    const { error } = await sb.from("perfiles").insert({ rp, nombre, password, rol, activo: true });
+    if (error) {
+      alert("Error al crear perfil: " + error.message);
+      return;
     }
+    document.getElementById("perf-rp").value = "";
+    document.getElementById("perf-nombre").value = "";
+    document.getElementById("perf-pass").value = "";
+    await cargarTodo();
+  }
 
-    function saveMaterial(e) {
-      e.preventDefault();
-      const id = document.getElementById('matId').value;
-      const code = document.getElementById('matCode').value.trim().toUpperCase();
-      const name = document.getElementById('matName').value.trim();
-      const unit = document.getElementById('matUnit').value;
-      const stock = parseFloat(document.getElementById('matStock').value) || 0;
-      const minStock = parseFloat(document.getElementById('matMin').value) || 0;
-
-      if (!name) return;
-
-      if (id) {
-        const mat = appState.materials.find(m => m.id === id);
-        if (mat) {
-          mat.code = code;
-          mat.name = name;
-          mat.unit = unit;
-          mat.stock = stock;
-          mat.minStock = minStock;
-        }
-        showToast('Material actualizado', 'success');
-      } else {
-        appState.materials.unshift({
-          id: 'mat_' + Date.now(),
-          code,
-          name,
-          unit,
-          stock,
-          minStock
-        });
-        showToast('Material agregado a bodega', 'success');
-      }
-
-      saveState();
-      closeModal('materialModal');
-      refreshAllViews();
-    }
-
-    function deleteMaterial(id) {
-      if (currentRole !== 'admin') {
-        showToast('Solo el Administrador puede eliminar materiales', 'error');
-        return;
-      }
-      const mat = appState.materials.find(m => m.id === id);
-      if (!mat) return;
-      appState.materials = appState.materials.filter(m => m.id !== id);
-      currentCart = currentCart.filter(c => c.materialId !== id);
-      saveState();
-      refreshAllViews();
-      showToast(`Material "${mat.name}" eliminado`, 'normal');
-    }
-
-    /* ==========================================================================
-       PESTAÑA 3: CUADRILLAS Y RESPONSABLES
-       ========================================================================== */
-    function renderCrews() {
-      const container = document.getElementById('crewsListContainer');
-      if (appState.crews.length === 0) {
-        container.innerHTML = `<div class="card empty-state">No hay cuadrillas registradas. Agrega una arriba.</div>`;
-        return;
-      }
-
-      const isAdmin = currentRole === 'admin';
-
-      container.innerHTML = appState.crews.map(c => `
-        <div class="stock-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-            <div>
-              <span class="badge badge-green" style="margin-bottom: 5px;">${escapeHtml(c.crewName)}</span>
-              <div style="font-weight: 700; font-size: 0.96rem;">${escapeHtml(c.personName)}</div>
-              <div style="font-size: 0.8rem; color: var(--slate-600);">RP / RPE: <strong>${escapeHtml(c.rpe)}</strong></div>
-            </div>
-            ${isAdmin ? `
-            <div style="display: flex; gap: 6px;">
-              <button type="button" class="btn btn-outline btn-sm" onclick="openCrewModal('${c.id}')">Editar</button>
-              <button type="button" class="btn btn-danger-outline btn-sm" onclick="deleteCrew('${c.id}')">Borrar</button>
-            </div>` : ''}
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function openCrewModal(id = null) {
-      if (currentRole !== 'admin') {
-        showToast('Solo el Administrador puede modificar cuadrillas', 'error');
-        return;
-      }
-      const form = document.getElementById('crewForm');
-      form.reset();
-      document.getElementById('crewId').value = '';
-
-      if (id) {
-        const crew = appState.crews.find(c => c.id === id);
-        if (crew) {
-          document.getElementById('crewModalTitle').textContent = 'Editar Cuadrilla';
-          document.getElementById('crewId').value = crew.id;
-          document.getElementById('crewTitle').value = crew.crewName;
-          document.getElementById('crewPerson').value = crew.personName;
-          document.getElementById('crewRpe').value = crew.rpe;
-        }
-      } else {
-        document.getElementById('crewModalTitle').textContent = 'Nueva Cuadrilla';
-      }
-
-      openModal('crewModal');
-    }
-
-    function saveCrew(e) {
-      e.preventDefault();
-      const id = document.getElementById('crewId').value;
-      const crewName = document.getElementById('crewTitle').value.trim().toUpperCase();
-      const personName = document.getElementById('crewPerson').value.trim();
-      const rpe = document.getElementById('crewRpe').value.trim().toUpperCase();
-
-      if (!crewName || !personName || !rpe) return;
-
-      if (id) {
-        const crew = appState.crews.find(c => c.id === id);
-        if (crew) {
-          crew.crewName = crewName;
-          crew.personName = personName;
-          crew.rpe = rpe;
-        }
-        showToast('Cuadrilla actualizada', 'success');
-      } else {
-        appState.crews.push({
-          id: 'crew_' + Date.now(),
-          crewName,
-          personName,
-          rpe
-        });
-        showToast('Cuadrilla agregada', 'success');
-      }
-
-      saveState();
-      closeModal('crewModal');
-      refreshAllViews();
-    }
-
-    function deleteCrew(id) {
-      if (currentRole !== 'admin') {
-        showToast('Solo el Administrador puede eliminar cuadrillas', 'error');
-        return;
-      }
-      appState.crews = appState.crews.filter(c => c.id !== id);
-      saveState();
-      refreshAllViews();
-      showToast('Cuadrilla eliminada', 'normal');
-    }
-
-    /* ==========================================================================
-       PESTAÑA 4: HISTORIAL Y REIMPRESIÓN / CANCELACIÓN
-       ========================================================================== */
-    function renderHistory() {
-      const container = document.getElementById('historyListContainer');
-      const query = document.getElementById('historySearch').value.toLowerCase().trim();
-      document.getElementById('historyTotalBadge').textContent = `${appState.deliveries.length} vales`;
-
-      const filtered = appState.deliveries.filter(d =>
-        d.folio.toLowerCase().includes(query) ||
-        d.crewName.toLowerCase().includes(query) ||
-        d.receiverName.toLowerCase().includes(query) ||
-        d.receiverRpe.toLowerCase().includes(query)
-      );
-
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="card empty-state">Aún no hay entregas registradas en el historial.</div>`;
-        return;
-      }
-
-      container.innerHTML = filtered.map(d => {
-        const summaryItems = d.items.map(i => `${i.qty} ${i.unit} ${i.name}`).join(', ');
-        return `
-          <div class="stock-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span class="badge badge-green">${escapeHtml(d.folio)}</span>
-              <span style="font-size: 0.78rem; font-weight: 700; color: var(--slate-600);">${formatReadableDate(d.date)}</span>
-            </div>
-
-            <div style="font-weight: 700; font-size: 0.95rem; color: var(--slate-900);">
-              ${escapeHtml(d.crewName)} — ${escapeHtml(d.receiverName)}
-            </div>
-            <div style="font-size: 0.78rem; color: var(--slate-600); margin-bottom: 6px;">
-              RP: <strong>${escapeHtml(d.receiverRpe)}</strong>
-            </div>
-            <div style="font-size: 0.8rem; color: var(--slate-700); background: var(--slate-50); padding: 7px 9px; border-radius: 6px; margin-bottom: 10px;">
-              ${escapeHtml(summaryItems)}
-            </div>
-
-            <div style="display: flex; justify-content: space-between; gap: 8px;">
-              <button type="button" class="btn btn-primary btn-sm" style="flex: 2;" onclick="openValePreview('${d.id}')">
-                📄 Ver / Reimprimir PDF
-              </button>
-              <button type="button" class="btn btn-danger-outline btn-sm" style="flex: 1;" onclick="cancelDeliveryAndReturnStock('${d.id}')" title="Anular vale y regresar material a bodega">
-                Anular Vale
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function cancelDeliveryAndReturnStock(deliveryId) {
-      if (currentRole !== 'admin') {
-        showToast('Solo el Administrador puede anular vales', 'error');
-        return;
-      }
-      const idx = appState.deliveries.findIndex(d => d.id === deliveryId);
-      if (idx === -1) return;
-
-      const record = appState.deliveries[idx];
-
-      // Devolver existencias a bodega
-      record.items.forEach(item => {
-        const mat = appState.materials.find(m => m.id === item.materialId);
-        if (mat) {
-          mat.stock = Number((mat.stock + item.qty).toFixed(4));
-        } else {
-          // Si el material fue borrado, lo recreamos en bodega
-          appState.materials.push({
-            id: item.materialId,
-            code: item.code || '',
-            name: item.name,
-            unit: item.unit,
-            stock: item.qty,
-            minStock: 1
-          });
-        }
-      });
-
-      appState.deliveries.splice(idx, 1);
-      saveState();
-      refreshAllViews();
-      showToast(`Vale ${record.folio} anulado y material devuelto a bodega`, 'success');
-    }
-
-    /* ==========================================================================
-       UTILIDADES: MODALES, RESPALDOS Y DESCARGA OFFLINE DE LA APP
-       ========================================================================== */
-    function openModal(id) {
-      document.getElementById(id).classList.add('open');
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).classList.remove('open');
-    }
-
-    function escapeHtml(str) {
-      if (str === null || str === undefined) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
-
-    // Exportar inventario a CSV compatible con Excel
-    function exportInventoryCSV() {
-      let csv = '\uFEFFCodigo,Descripcion,Unidad,Existencia,StockMinimo\n';
-      appState.materials.forEach(m => {
-        csv += `"${(m.code || '').replace(/"/g, '""')}","${m.name.replace(/"/g, '""')}","${m.unit}",${m.stock},${m.minStock || 0}\n`;
-      });
-      triggerFileDownload(csv, `Inventario_Bodega_${new Date().toISOString().slice(0,10)}.csv`, 'text/csv;charset=utf-8;');
-      showToast('Inventario exportado a CSV / Excel', 'success');
-    }
-
-    // Exportar respaldo completo JSON
-    function exportBackupJSON() {
-      const json = JSON.stringify(appState, null, 2);
-      triggerFileDownload(json, `Respaldo_Bodega_${new Date().toISOString().slice(0,10)}.json`, 'application/json');
-      showToast('Copia de seguridad descargada', 'success');
-    }
-
-    // Importar respaldo JSON
-    function importBackupJSON(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const parsed = JSON.parse(e.target.result);
-          if (parsed && Array.isArray(parsed.materials) && Array.isArray(parsed.crews)) {
-            appState = parsed;
-            saveState();
-            refreshAllViews();
-            showToast('Respaldo restaurado correctamente', 'success');
-          } else {
-            showToast('El archivo seleccionado no es un respaldo válido', 'error');
-          }
-        } catch (err) {
-          showToast('Error al leer el archivo de respaldo', 'error');
-        }
-      };
-      reader.readAsText(file);
-      event.target.value = '';
-    }
-
-    // Descargar esta misma aplicación como archivo HTML independiente para el celular
-    function openInstallHelperModal() {
-      openModal('installHelperModal');
-    }
-
-    function copyFullAppCode() {
-// ... existing code ... -->
-```
+  async function togglePerfil(id, nuevoEstado) {
+    if (!usuarioActual || usuarioActual.rol !== "admin") return;
+    await sb.from("perfiles").update({ activo: nuevoEstado }).eq("id", id);
+    await cargarTodo();
+  }
+</script>
+</body>
+</html>
