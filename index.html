@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#006837" />
+  <link rel="manifest" href="./manifest.json" />
   <title>CFE Bodega - Zona Altos / Área Yahualica</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
@@ -62,7 +63,6 @@
     }
     .nav-btn.active { background: var(--cfe-green); color: #fff; border-color: var(--cfe-green); }
 
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
     .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
     .form-group { margin-bottom: 12px; }
     label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: var(--muted); text-transform: uppercase; }
@@ -116,7 +116,7 @@
     <h2>Iniciar Sesión</h2>
     <div class="form-group">
       <label>RP</label>
-      <input type="text" id="login-rp" placeholder="Ej. 9A123" autocomplete="username" />
+      <input type="text" id="login-rp" placeholder="Ej. 9NX1C" autocomplete="username" />
     </div>
     <div class="form-group">
       <label>Contraseña</label>
@@ -353,7 +353,7 @@
 <script>
   const SUPABASE_URL = "https://smhjvpjtjivzpzuwoahc.supabase.co";
   const SUPABASE_KEY = "sb_publishable_W6OAZHsvc5pBSSmAXLGwhA_hFnloN1H";
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
   let usuarioActual = null;
   let materiales = [];
@@ -364,61 +364,56 @@
 
   document.getElementById("sal-fecha").valueAsDate = new Date();
 
-  // Manifest PWA dinámico para soporte instalable en navegador
-  const manifestData = {
-    name: "CFE Bodega - Zona Altos / Área Yahualica",
-    short_name: "CFE Bodega",
-    start_url: ".",
-    display: "standalone",
-    background_color: "#f3f6f4",
-    theme_color: "#006837",
-    icons: [{
-      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23006837'/%3E%3Ctext x='50' y='66' font-size='52' text-anchor='middle' fill='white'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E",
-      sizes: "192x192",
-      type: "image/svg+xml"
-    }]
-  };
-  const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: "application/json" });
-  const manifestLink = document.createElement("link");
-  manifestLink.rel = "manifest";
-  manifestLink.href = URL.createObjectURL(manifestBlob);
-  document.head.appendChild(manifestLink);
-
   async function iniciarSesion() {
     const rp = document.getElementById("login-rp").value.trim();
     const pass = document.getElementById("login-pass").value;
     const statusEl = document.getElementById("login-status");
+
+    if (!sb) {
+      statusEl.textContent = "Error: No cargó la librería de Supabase. Revisa tu conexión a internet.";
+      return;
+    }
     if (!rp || !pass) {
       statusEl.textContent = "Ingresa tu RP y contraseña.";
       return;
     }
+
     statusEl.textContent = "Verificando credenciales...";
-    const { data, error } = await sb
-      .from("perfiles")
-      .select("*")
-      .eq("rp", rp)
-      .eq("password", pass)
-      .eq("activo", true)
-      .maybeSingle();
+    try {
+      const { data, error } = await sb
+        .from("perfiles")
+        .select("*")
+        .eq("rp", rp)
+        .eq("password", pass)
+        .eq("activo", true)
+        .maybeSingle();
 
-    if (error || !data) {
-      statusEl.textContent = "RP o contraseña incorrectos, o perfil inactivo.";
-      return;
+      if (error) {
+        statusEl.textContent = Error de base de datos (${error.code || "API"}): ${error.message};
+        return;
+      }
+      if (!data) {
+        statusEl.textContent = "No se encontró un perfil activo con ese RP y contraseña. Revisa el registro en Supabase.";
+        return;
+      }
+
+      usuarioActual = data;
+      statusEl.textContent = "";
+      document.getElementById("login-view").classList.add("hidden");
+      document.getElementById("app-view").classList.remove("hidden");
+      document.getElementById("btn-sync").classList.remove("hidden");
+      document.getElementById("btn-logout").classList.remove("hidden");
+      document.getElementById("lbl-usuario").textContent = ${data.nombre} (${data.rp}) · ${data.rol.toUpperCase()};
+
+      const esAdmin = data.rol === "admin";
+      document.getElementById("admin-material-form").classList.toggle("hidden", !esAdmin);
+      document.querySelectorAll(".col-admin-only").forEach(el => el.classList.toggle("hidden", !esAdmin));
+      document.getElementById("tab-perfiles").classList.toggle("hidden", !esAdmin);
+
+      await cargarTodo();
+    } catch (err) {
+      statusEl.textContent = Error inesperado al conectar: ${err.message || err};
     }
-    usuarioActual = data;
-    statusEl.textContent = "";
-    document.getElementById("login-view").classList.add("hidden");
-    document.getElementById("app-view").classList.remove("hidden");
-    document.getElementById("btn-sync").classList.remove("hidden");
-    document.getElementById("btn-logout").classList.remove("hidden");
-    document.getElementById("lbl-usuario").textContent = ${data.nombre} (${data.rp}) · ${data.rol.toUpperCase()};
-
-    const esAdmin = data.rol === "admin";
-    document.getElementById("admin-material-form").classList.toggle("hidden", !esAdmin);
-    document.querySelectorAll(".col-admin-only").forEach(el => el.classList.toggle("hidden", !esAdmin));
-    document.getElementById("tab-perfiles").classList.toggle("hidden", !esAdmin);
-
-    await cargarTodo();
   }
 
   function cerrarSesion() {
