@@ -59,17 +59,17 @@
       msg.textContent = "Consultando base de datos en la nube...";
 
       try {
-        const url = ${SUPABASE_URL}/rest/v1/perfiles?rp=eq.${encodeURIComponent(rp)}&password=eq.${encodeURIComponent(pass)}&activo=eq.true&select=*;
+        const url = SUPABASE_URL + "/rest/v1/perfiles?rp=eq." + encodeURIComponent(rp) + "&password=eq." + encodeURIComponent(pass) + "&activo=eq.true&select=*";
         const res = await fetch(url, {
           headers: {
             "apikey": SUPABASE_KEY,
-            "Authorization": Bearer ${SUPABASE_KEY}
+            "Authorization": "Bearer " + SUPABASE_KEY
           }
         });
 
         const texto = await res.text();
         if (!res.ok) {
-          msg.textContent = Error HTTP ${res.status}:\n${texto};
+          msg.textContent = "Error HTTP " + res.status + ":\n" + texto;
           return;
         }
 
