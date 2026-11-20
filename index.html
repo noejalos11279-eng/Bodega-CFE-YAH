@@ -52,7 +52,7 @@
       const pass = document.getElementById("pass").value;
 
       if (!rp || !pass) {
-        msg.textContent = "Escribe tu RP y tu contraseña.";
+        msg.textContent = "Escribe tu RPE y tu contraseña.";
         return;
       }
 
@@ -75,17 +75,17 @@
 
         const filas = JSON.parse(texto);
         if (!Array.isArray(filas) || filas.length === 0) {
-          msg.textContent = "No se encontró el usuario con ese RP y contraseña (o está inactivo).";
+          msg.textContent = "No se encontró el usuario con ese RPE y contraseña (o está inactivo).";
           return;
         }
 
         const user = filas[0];
         document.getElementById("login-form").style.display = "none";
         document.getElementById("panel").style.display = "block";
-        document.getElementById("bienvenida").textContent = Bienvenido, ${user.nombre};
-        document.getElementById("datos-rol").textContent = RP: ${user.rp} | Rol: ${user.rol};
+        document.getElementById("bienvenida").textContent = "Bienvenido, " + user.nombre;
+        document.getElementById("datos-rol").textContent = "RPE: " + user.rp + " | Rol: " + user.rol;
       } catch (err) {
-        msg.textContent = Error de red o conexión:\n${err.message || err};
+        msg.textContent = "Error de red o conexión:\n" + (err.message || err);
       }
     }
 
@@ -96,5 +96,3 @@
       document.getElementById("msg").textContent = "Sesión cerrada.";
     }
   </script>
-</body>
-</html>
