@@ -3,96 +3,875 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CFE Bodega - Acceso</title>
+  <meta name="theme-color" content="#006837" />
+  <title>CFE Bodega - Zona Altos / Área Yahualica</title>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; background: #f3f6f4; margin: 0; padding: 16px; color: #1c2420; }
-    .box { max-width: 420px; margin: 24px auto; background: #fff; border: 1px solid #d5dfd9; border-radius: 10px; padding: 18px; }
-    .header { background: #006837; color: #fff; padding: 14px; border-radius: 8px; margin-bottom: 16px; }
-    .header h1 { margin: 0; font-size: 18px; }
-    .header p { margin: 4px 0 0; font-size: 12px; }
-    label { display: block; font-size: 12px; font-weight: bold; margin-top: 12px; margin-bottom: 4px; }
-    input { width: 100%; padding: 10px; font-size: 15px; border: 1px solid #b8c7be; border-radius: 6px; box-sizing: border-box; }
-    button { width: 100%; margin-top: 16px; padding: 12px; font-size: 15px; font-weight: bold; background: #006837; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
-    #msg { margin-top: 12px; font-size: 13px; padding: 10px; border-radius: 6px; background: #eef3f0; white-space: pre-wrap; }
-    .panel { display: none; margin-top: 16px; padding-top: 14px; border-top: 1px solid #d5dfd9; }
+    :root {
+      --cfe-green: #006837;
+      --cfe-green-dark: #004725;
+      --cfe-green-light: #e8f5e9;
+      --bg: #f3f6f4;
+      --card: #ffffff;
+      --text: #1c2420;
+      --muted: #5c6b63;
+      --border: #d5dfd9;
+      --danger: #c62828;
+      --danger-bg: #ffebee;
+      --primary: #1565c0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 40px; }
+    .container { max-width: 980px; margin: 0 auto; }
+    header {
+      background: linear-gradient(135deg, var(--cfe-green), var(--cfe-green-dark));
+      color: #fff;
+      padding: 16px;
+      border-radius: 10px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-badge {
+      width: 44px; height: 44px; border-radius: 50%; background: #fff; color: var(--cfe-green);
+      display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px;
+    }
+    .brand h1 { font-size: 18px; letter-spacing: 0.5px; }
+    .brand p { font-size: 12px; opacity: 0.92; }
+    .session-box { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; }
+    .pill { background: rgba(255,255,255,0.18); padding: 5px 10px; border-radius: 20px; font-weight: bold; }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+    }
+    h2 { font-size: 16px; color: var(--cfe-green); margin-bottom: 12px; border-bottom: 2px solid var(--cfe-green-light); padding-bottom: 6px; }
+    h3 { font-size: 14px; margin: 14px 0 8px; color: var(--text); }
+
+    .nav-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 14px; padding-bottom: 4px; }
+    .nav-btn {
+      border: 1px solid var(--border); background: #fff; color: var(--text);
+      padding: 9px 13px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; white-space: nowrap;
+    }
+    .nav-btn.active { background: var(--cfe-green); color: #fff; border-color: var(--cfe-green); }
+
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: var(--muted); text-transform: uppercase; }
+    input, select, textarea {
+      width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 14px; background: #fff;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+
+    .btn {
+      border: none; border-radius: 7px; padding: 10px 14px; font-size: 14px; font-weight: bold;
+      cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn-green { background: var(--cfe-green); color: #fff; }
+    .btn-green:hover { background: var(--cfe-green-dark); }
+    .btn-blue { background: var(--primary); color: #fff; }
+    .btn-red { background: var(--danger); color: #fff; padding: 6px 10px; font-size: 12px; }
+    .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.6); color: #fff; padding: 6px 10px; font-size: 12px; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+    th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
+    th { background: var(--cfe-green-light); color: var(--cfe-green-dark); font-weight: bold; }
+    tr.low-stock { background: var(--danger-bg); color: var(--danger); font-weight: bold; }
+    .alert-banner {
+      background: var(--danger-bg); border: 1px solid #ef9a9a; color: var(--danger);
+      padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; font-weight: bold;
+    }
+    .status-msg { font-size: 13px; color: var(--muted); margin-top: 10px; white-space: pre-wrap; }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
-  <div class="box">
-    <div class="header">
-      <h1>CFE BODEGA</h1>
-      <p>Zona Altos / Área Yahualica</p>
+<div class="container">
+  <header>
+    <div class="brand">
+      <div class="brand-badge">⚡</div>
+      <div>
+        <h1>CFE BODEGA</h1>
+        <p>Comisión Federal de Electricidad · Zona Altos / Área Yahualica</p>
+      </div>
     </div>
-
-    <div id="login-form">
-      <label for="rp">RPE</label>
-      <input id="rp" type="text" placeholder="RPE DE USUARIO" />
-
-      <label for="pass">Contraseña</label>
-      <input id="pass" type="password" placeholder="Contraseña" />
-
-      <button id="btn-entrar" type="button" onclick="entrar()">Entrar al Sistema</button>
-      <div id="msg">Listo para iniciar sesión.</div>
+    <div class="session-box" id="session-bar">
+      <span class="pill" id="lbl-usuario">Sin sesión</span>
+      <button type="button" class="btn btn-outline hidden" id="btn-sync" onclick="cargarTodo()">🔄 Sincronizar</button>
+      <button type="button" class="btn btn-outline hidden" id="btn-logout" onclick="cerrarSesion()">Salir</button>
     </div>
+  </header>
 
-    <div id="panel" class="panel">
-      <h2 id="bienvenida" style="margin:0 0 8px; font-size:17px; color:#006837;"></h2>
-      <p id="datos-rol" style="margin:0 0 12px; font-size:14px;"></p>
-      <button type="button" onclick="salir()" style="background:#444;">Cerrar sesión</button>
+  <!-- PANTALLA DE LOGIN -->
+  <div class="card" id="login-view" style="max-width: 440px; margin: 24px auto;">
+    <h2>Iniciar Sesión</h2>
+    <div class="form-group">
+      <label for="login-rp">RPE</label>
+      <input type="text" id="login-rp" placeholder="RPE" autocomplete="username" />
     </div>
+    <div class="form-group">
+      <label for="login-pass">Contraseña</label>
+      <input type="password" id="login-pass" placeholder="Tu contraseña" autocomplete="current-password" />
+    </div>
+    <button type="button" class="btn btn-green" style="width:100%" onclick="iniciarSesion()">Entrar al Sistema</button>
+    <p class="status-msg" id="login-status">Listo para iniciar sesión.</p>
   </div>
 
-  <script>
-    const SUPABASE_URL = "https://smhjvpjtjivzpzuwoahc.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_W6OAZHsvc5pBSSmAXLGwhA_hFnloN1H";
+  <!-- APP PRINCIPAL -->
+  <div id="app-view" class="hidden">
+    <div class="nav-tabs">
+      <button type="button" class="nav-btn active" data-tab="stock" onclick="cambiarTab('stock')">📦 Stock y Faltantes</button>
+      <button type="button" class="nav-btn" data-tab="entrada" onclick="cambiarTab('entrada')">📥 Entrada a Bodega</button>
+      <button type="button" class="nav-btn" data-tab="salida" onclick="cambiarTab('salida')">📤 Salida / Vale PDF</button>
+      <button type="button" class="nav-btn" data-tab="movimientos" onclick="cambiarTab('movimientos')">📋 Movimientos</button>
+      <button type="button" class="nav-btn hidden" id="tab-perfiles" data-tab="perfiles" onclick="cambiarTab('perfiles')">👥 Perfiles</button>
+    </div>
 
-    async function entrar() {
-      const msg = document.getElementById("msg");
-      const rp = document.getElementById("rp").value.trim();
-      const pass = document.getElementById("pass").value;
+    <!-- 1. STOCK Y FALTANTES -->
+    <section class="card" id="tab-stock">
+      <h2>Inventario en Bodega y Materiales Faltantes</h2>
+      <div id="alerta-faltantes" class="alert-banner hidden"></div>
 
-      if (!rp || !pass) {
-        msg.textContent = "Escribe tu RPE y tu contraseña.";
+      <div id="admin-material-form" class="hidden">
+        <h3>Agregar Nuevo Material al Catálogo</h3>
+        <div class="grid-3">
+          <div class="form-group">
+            <label>Código</label>
+            <input type="text" id="mat-codigo" placeholder="Ej. MAT-001" />
+          </div>
+          <div class="form-group">
+            <label>Descripción</label>
+            <input type="text" id="mat-desc" placeholder="Ej. Conductor ACSR 2/0" />
+          </div>
+          <div class="form-group">
+            <label>Cantidad Inicial</label>
+            <input type="number" id="mat-cant" min="0" step="any" value="0" />
+          </div>
+          <div class="form-group">
+            <label>Unidad de Medida</label>
+            <select id="mat-unidad">
+              <option value="Piezas">Piezas</option>
+              <option value="Metro">Metro</option>
+              <option value="Kilogramos">Kilogramos</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Stock Mínimo</label>
+            <input type="number" id="mat-min" min="0" step="any" value="0" />
+          </div>
+        </div>
+        <button type="button" class="btn btn-green" onclick="agregarMaterial()">Guardar Material</button>
+      </div>
+
+      <h3>Existencias Actuales (en rojo: igual o por debajo del mínimo)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Descripción</th>
+              <th>Unidad</th>
+              <th>Stock Actual</th>
+              <th>Mínimo</th>
+              <th>Estatus</th>
+              <th class="col-admin-only hidden">Ajustar Mínimo</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-stock"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 2. ENTRADA A BODEGA -->
+    <section class="card hidden" id="tab-entrada">
+      <h2>Registrar Entrada de Material a Bodega</h2>
+      <div class="grid-3">
+        <div class="form-group">
+          <label>Material</label>
+          <select id="ent-material"></select>
+        </div>
+        <div class="form-group">
+          <label>Cantidad Recibida</label>
+          <input type="number" id="ent-cant" min="0.01" step="any" value="1" />
+        </div>
+        <div class="form-group">
+          <label>Actividad</label>
+          <input type="text" id="ent-actividad" placeholder="Ej. Surtimiento de almacén / Mantenimiento" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Observaciones</label>
+        <textarea id="ent-obs" placeholder="Notas adicionales de la entrada..."></textarea>
+      </div>
+      <button type="button" class="btn btn-green" onclick="registrarEntrada()">Registrar Entrada y Generar Folio</button>
+      <p class="status-msg" id="ent-status"></p>
+    </section>
+
+    <!-- 3. SALIDA / VALE PDF -->
+    <section class="card hidden" id="tab-salida">
+      <h2>Generar Vale de Salida y Descargar PDF</h2>
+      <div class="grid-3">
+        <div class="form-group">
+          <label>Fecha</label>
+          <input type="date" id="sal-fecha" />
+        </div>
+        <div class="form-group">
+          <label>Cuadrilla</label>
+          <input type="text" id="sal-cuadrilla" placeholder="Ej. YAHUALICA 1" />
+        </div>
+        <div class="form-group">
+          <label>RPE de Quien Recibe</label>
+          <input type="text" id="sal-rec-rp" placeholder="RPE del compañero" />
+        </div>
+        <div class="form-group">
+          <label>Nombre de Quien Recibe</label>
+          <input type="text" id="sal-rec-nombre" placeholder="Nombre completo" />
+        </div>
+        <div class="form-group">
+          <label>Actividad</label>
+          <input type="text" id="sal-actividad" placeholder="Ej. Libranza / Cambio de transformador" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Observaciones</label>
+        <textarea id="sal-obs" placeholder="Observaciones del vale..."></textarea>
+      </div>
+
+      <h3>Agregar Materiales al Vale</h3>
+      <div class="grid-3">
+        <div class="form-group">
+          <label>Material</label>
+          <select id="sal-material"></select>
+        </div>
+        <div class="form-group">
+          <label>Cantidad a Entregar</label>
+          <input type="number" id="sal-cant" min="0.01" step="any" value="1" />
+        </div>
+        <div class="form-group" style="display:flex; align-items:flex-end;">
+          <button type="button" class="btn btn-green" style="width:100%" onclick="agregarItemSalida()">➕ Agregar al Vale</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Descripción</th>
+              <th>Unidad</th>
+              <th>Cantidad</th>
+              <th>Quitar</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-vale-draft"></tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:14px;">
+        <button type="button" class="btn btn-blue" onclick="registrarSalidaYPDF()">📄 Registrar Salida, Descontar Stock y Descargar PDF</button>
+      </div>
+      <p class="status-msg" id="sal-status"></p>
+    </section>
+
+    <!-- 4. MOVIMIENTOS -->
+    <section class="card hidden" id="tab-movimientos">
+      <h2>Historial Compartido de Movimientos (Entradas y Salidas)</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Folio</th>
+              <th>Tipo</th>
+              <th>Fecha</th>
+              <th>Registró (RPE)</th>
+              <th>Cuadrilla / Receptor</th>
+              <th>Actividad</th>
+              <th>Observaciones</th>
+              <th>Detalle</th>
+              <th>PDF</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-movimientos"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 5. PERFILES (SOLO ADMIN) -->
+    <section class="card hidden" id="tab-perfiles">
+      <h2>Administración de Perfiles</h2>
+      <div class="grid-3">
+        <div class="form-group">
+          <label>RPE</label>
+          <input type="text" id="perf-rp" placeholder="RPE" />
+        </div>
+        <div class="form-group">
+          <label>Nombre</label>
+          <input type="text" id="perf-nombre" placeholder="Nombre del técnico o usuario" />
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="perf-pass" placeholder="Contraseña" />
+        </div>
+        <div class="form-group">
+          <label>Rol</label>
+          <select id="perf-rol">
+            <option value="tecnico">Técnico</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+      </div>
+      <button type="button" class="btn btn-green" onclick="crearPerfil()">Crear Perfil</button>
+
+      <h3>Perfiles Registrados</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>RPE</th>
+              <th>Nombre</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-perfiles"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://smhjvpjtjivzpzuwoahc.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_W6OAZHsvc5pBSSmAXLGwhA_hFnloN1H";
+
+  let usuarioActual = null;
+  let materiales = [];
+  let movimientos = [];
+  let detallesMov = [];
+  let perfiles = [];
+  let valeDraft = [];
+
+  document.getElementById("sal-fecha").valueAsDate = new Date();
+
+  async function sbRest(path, method, bodyObj, preferReturn) {
+    const headers = {
+      "apikey": SUPABASE_KEY,
+      "Authorization": "Bearer " + SUPABASE_KEY
+    };
+    if (bodyObj !== undefined) {
+      headers["Content-Type"] = "application/json";
+    }
+    if (preferReturn) {
+      headers["Prefer"] = "return=representation";
+    }
+    const res = await fetch(SUPABASE_URL + "/rest/v1/" + path, {
+      method: method || "GET",
+      headers: headers,
+      body: bodyObj !== undefined ? JSON.stringify(bodyObj) : undefined
+    });
+    const text = await res.text();
+    if (!res.ok) {
+      throw new Error("HTTP " + res.status + ": " + text);
+    }
+    return text ? JSON.parse(text) : null;
+  }
+
+  async function iniciarSesion() {
+    const rp = document.getElementById("login-rp").value.trim();
+    const pass = document.getElementById("login-pass").value;
+    const statusEl = document.getElementById("login-status");
+
+    if (!rp || !pass) {
+      statusEl.textContent = "Escribe tu RPE y tu contraseña.";
+      return;
+    }
+
+    statusEl.textContent = "Verificando credenciales...";
+    try {
+      const q = "perfiles?rp=eq." + encodeURIComponent(rp) + "&password=eq." + encodeURIComponent(pass) + "&activo=eq.true&select=*";
+      const filas = await sbRest(q, "GET");
+
+      if (!Array.isArray(filas) || filas.length === 0) {
+        statusEl.textContent = "No se encontró un perfil activo con ese RPE y contraseña.";
         return;
       }
 
-      msg.textContent = "Consultando base de datos en la nube...";
+      const data = filas[0];
+      usuarioActual = data;
+      statusEl.textContent = "";
+      document.getElementById("login-view").classList.add("hidden");
+      document.getElementById("app-view").classList.remove("hidden");
+      document.getElementById("btn-sync").classList.remove("hidden");
+      document.getElementById("btn-logout").classList.remove("hidden");
+      document.getElementById("lbl-usuario").textContent = data.nombre + " (" + data.rp + ") · " + data.rol.toUpperCase();
 
-      try {
-        const url = SUPABASE_URL + "/rest/v1/perfiles?rp=eq." + encodeURIComponent(rp) + "&password=eq." + encodeURIComponent(pass) + "&activo=eq.true&select=*";
-        const res = await fetch(url, {
-          headers: {
-            "apikey": SUPABASE_KEY,
-            "Authorization": "Bearer " + SUPABASE_KEY
-          }
-        });
+      const esAdmin = data.rol === "admin";
+      document.getElementById("admin-material-form").classList.toggle("hidden", !esAdmin);
+      document.querySelectorAll(".col-admin-only").forEach(function(el) {
+        el.classList.toggle("hidden", !esAdmin);
+      });
+      document.getElementById("tab-perfiles").classList.toggle("hidden", !esAdmin);
 
-        const texto = await res.text();
-        if (!res.ok) {
-          msg.textContent = "Error HTTP " + res.status + ":\n" + texto;
-          return;
-        }
+      await cargarTodo();
+    } catch (err) {
+      statusEl.textContent = "Error al iniciar sesión: " + (err.message || err);
+    }
+  }
 
-        const filas = JSON.parse(texto);
-        if (!Array.isArray(filas) || filas.length === 0) {
-          msg.textContent = "No se encontró el usuario con ese RPE y contraseña (o está inactivo).";
-          return;
-        }
+  function cerrarSesion() {
+    usuarioActual = null;
+    valeDraft = [];
+    document.getElementById("app-view").classList.add("hidden");
+    document.getElementById("login-view").classList.remove("hidden");
+    document.getElementById("btn-sync").classList.add("hidden");
+    document.getElementById("btn-logout").classList.add("hidden");
+    document.getElementById("lbl-usuario").textContent = "Sin sesión";
+    document.getElementById("login-pass").value = "";
+    document.getElementById("login-status").textContent = "Sesión cerrada.";
+  }
 
-        const user = filas[0];
-        document.getElementById("login-form").style.display = "none";
-        document.getElementById("panel").style.display = "block";
-        document.getElementById("bienvenida").textContent = "Bienvenido, " + user.nombre;
-        document.getElementById("datos-rol").textContent = "RPE: " + user.rp + " | Rol: " + user.rol;
-      } catch (err) {
-        msg.textContent = "Error de red o conexión:\n" + (err.message || err);
+  function cambiarTab(tabName) {
+    document.querySelectorAll("section.card").forEach(function(sec) {
+      sec.classList.add("hidden");
+    });
+    document.getElementById("tab-" + tabName).classList.remove("hidden");
+    document.querySelectorAll(".nav-btn").forEach(function(btn) {
+      btn.classList.toggle("active", btn.dataset.tab === tabName);
+    });
+  }
+
+  async function cargarTodo() {
+    try {
+      const resultados = await Promise.all([
+        sbRest("materiales?select=*&order=codigo.asc", "GET"),
+        sbRest("movimientos?select=*&order=creado_en.desc", "GET"),
+        sbRest("movimiento_detalle?select=*", "GET")
+      ]);
+      materiales = resultados[0] || [];
+      movimientos = resultados[1] || [];
+      detallesMov = resultados[2] || [];
+
+      if (usuarioActual && usuarioActual.rol === "admin") {
+        perfiles = (await sbRest("perfiles?select=*&order=creado_en.asc", "GET")) || [];
+        renderPerfiles();
       }
+
+      renderStockYFaltantes();
+      renderSelectoresMateriales();
+      renderMovimientos();
+    } catch (err) {
+      alert("Error al sincronizar datos: " + (err.message || err));
+    }
+  }
+
+  function renderStockYFaltantes() {
+    const tbody = document.getElementById("tbody-stock");
+    const alerta = document.getElementById("alerta-faltantes");
+    const esAdmin = usuarioActual && usuarioActual.rol === "admin";
+    tbody.innerHTML = "";
+
+    const faltantes = materiales.filter(function(m) {
+      return Number(m.stock_actual) <= Number(m.stock_minimo);
+    });
+
+    if (faltantes.length > 0) {
+      alerta.classList.remove("hidden");
+      alerta.textContent = "⚠️ Materiales que nos hacen falta (" + faltantes.length + "): " +
+        faltantes.map(function(f) {
+          return f.codigo + " - " + f.descripcion + " (" + f.stock_actual + "/" + f.stock_minimo + " " + f.unidad + ")";
+        }).join(" | ");
+    } else {
+      alerta.classList.add("hidden");
     }
 
-    function salir() {
-      document.getElementById("panel").style.display = "none";
-      document.getElementById("login-form").style.display = "block";
-      document.getElementById("pass").value = "";
-      document.getElementById("msg").textContent = "Sesión cerrada.";
+    materiales.forEach(function(m) {
+      const bajo = Number(m.stock_actual) <= Number(m.stock_minimo);
+      const tr = document.createElement("tr");
+      if (bajo) tr.classList.add("low-stock");
+
+      let celdaAdmin = "";
+      if (esAdmin) {
+        celdaAdmin = '<td><input type="number" min="0" step="any" value="' + m.stock_minimo + '" onchange="actualizarMinimo(\'' + m.id + '\', this.value)" style="width:90px; padding:5px;" /></td>';
+      }
+
+      tr.innerHTML =
+        "<td>" + m.codigo + "</td>" +
+        "<td>" + m.descripcion + "</td>" +
+        "<td>" + m.unidad + "</td>" +
+        "<td>" + m.stock_actual + "</td>" +
+        "<td>" + m.stock_minimo + "</td>" +
+        "<td>" + (bajo ? "FALTANTE / BAJO MÍNIMO" : "Disponible") + "</td>" +
+        celdaAdmin;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function actualizarMinimo(id, nuevoMin) {
+    if (!usuarioActual || usuarioActual.rol !== "admin") return;
+    const valor = Math.max(0, Number(nuevoMin) || 0);
+    try {
+      await sbRest("materiales?id=eq." + encodeURIComponent(id), "PATCH", {
+        stock_minimo: valor,
+        actualizado_en: new Date().toISOString()
+      });
+      await cargarTodo();
+    } catch (err) {
+      alert("Error al actualizar mínimo: " + (err.message || err));
     }
-  </script>
+  }
+
+  async function agregarMaterial() {
+    if (!usuarioActual || usuarioActual.rol !== "admin") return;
+    const codigo = document.getElementById("mat-codigo").value.trim();
+    const descripcion = document.getElementById("mat-desc").value.trim();
+    const cantidad = Number(document.getElementById("mat-cant").value) || 0;
+    const unidad = document.getElementById("mat-unidad").value;
+    const minimo = Number(document.getElementById("mat-min").value) || 0;
+
+    if (!codigo || !descripcion) {
+      alert("Completa código y descripción.");
+      return;
+    }
+
+    try {
+      await sbRest("materiales", "POST", {
+        codigo: codigo,
+        descripcion: descripcion,
+        unidad: unidad,
+        stock_actual: cantidad,
+        stock_minimo: minimo
+      });
+      document.getElementById("mat-codigo").value = "";
+      document.getElementById("mat-desc").value = "";
+      document.getElementById("mat-cant").value = "0";
+      document.getElementById("mat-min").value = "0";
+      await cargarTodo();
+    } catch (err) {
+      alert("Error al guardar material: " + (err.message || err));
+    }
+  }
+
+  function renderSelectoresMateriales() {
+    const selEnt = document.getElementById("ent-material");
+    const selSal = document.getElementById("sal-material");
+    selEnt.innerHTML = "";
+    selSal.innerHTML = "";
+    materiales.forEach(function(m) {
+      const opt = '<option value="' + m.id + '">' + m.codigo + " - " + m.descripcion + " (" + m.stock_actual + " " + m.unidad + ")</option>";
+      selEnt.innerHTML += opt;
+      selSal.innerHTML += opt;
+    });
+  }
+
+  function siguienteFolio(tipo) {
+    const prefijo = tipo === "entrada" ? "ENT-" : "SAL-";
+    let maxNum = 0;
+    movimientos
+      .filter(function(m) { return m.tipo === tipo && m.folio && m.folio.indexOf(prefijo) === 0; })
+      .forEach(function(m) {
+        const n = parseInt(m.folio.replace(prefijo, ""), 10);
+        if (!isNaN(n) && n > maxNum) maxNum = n;
+      });
+    return prefijo + String(maxNum + 1).padStart(4, "0");
+  }
+
+  async function registrarEntrada() {
+    const matId = document.getElementById("ent-material").value;
+    const cant = Number(document.getElementById("ent-cant").value);
+    const actividad = document.getElementById("ent-actividad").value.trim();
+    const observaciones = document.getElementById("ent-obs").value.trim();
+    const statusEl = document.getElementById("ent-status");
+
+    const mat = materiales.find(function(m) { return String(m.id) === String(matId); });
+    if (!mat || !cant || cant <= 0) {
+      statusEl.textContent = "Selecciona un material y una cantidad mayor a 0.";
+      return;
+    }
+
+    try {
+      const folio = siguienteFolio("entrada");
+      const creados = await sbRest("movimientos", "POST", {
+        tipo: "entrada",
+        folio: folio,
+        fecha: new Date().toISOString().slice(0, 10),
+        usuario_rp: usuarioActual.rp,
+        usuario_nombre: usuarioActual.nombre,
+        actividad: actividad,
+        observaciones: observaciones
+      }, true);
+
+      const movData = creados[0];
+      await sbRest("movimiento_detalle", "POST", {
+        movimiento_id: movData.id,
+        material_id: mat.id,
+        codigo: mat.codigo,
+        descripcion: mat.descripcion,
+        unidad: mat.unidad,
+        cantidad: cant
+      });
+
+      await sbRest("materiales?id=eq." + encodeURIComponent(mat.id), "PATCH", {
+        stock_actual: Number(mat.stock_actual) + cant,
+        actualizado_en: new Date().toISOString()
+      });
+
+      document.getElementById("ent-cant").value = "1";
+      document.getElementById("ent-actividad").value = "";
+      document.getElementById("ent-obs").value = "";
+      statusEl.textContent = "Entrada registrada con folio " + folio + ".";
+      await cargarTodo();
+    } catch (err) {
+      statusEl.textContent = "Error al registrar entrada: " + (err.message || err);
+    }
+  }
+
+  function agregarItemSalida() {
+    const matId = document.getElementById("sal-material").value;
+    const cant = Number(document.getElementById("sal-cant").value);
+    const mat = materiales.find(function(m) { return String(m.id) === String(matId); });
+    if (!mat || !cant || cant <= 0) {
+      alert("Selecciona material y cantidad válida.");
+      return;
+    }
+    if (cant > Number(mat.stock_actual)) {
+      alert("Stock insuficiente. Disponible: " + mat.stock_actual + " " + mat.unidad);
+      return;
+    }
+    valeDraft.push({
+      material_id: mat.id,
+      codigo: mat.codigo,
+      descripcion: mat.descripcion,
+      unidad: mat.unidad,
+      cantidad: cant
+    });
+    renderValeDraft();
+  }
+
+  function renderValeDraft() {
+    const tbody = document.getElementById("tbody-vale-draft");
+    tbody.innerHTML = "";
+    valeDraft.forEach(function(item, idx) {
+      tbody.innerHTML +=
+        "<tr>" +
+          "<td>" + item.codigo + "</td>" +
+          "<td>" + item.descripcion + "</td>" +
+          "<td>" + item.unidad + "</td>" +
+          "<td>" + item.cantidad + "</td>" +
+          '<td><button type="button" class="btn btn-red" onclick="valeDraft.splice(' + idx + ',1); renderValeDraft();">Quitar</button></td>' +
+        "</tr>";
+    });
+  }
+
+  async function registrarSalidaYPDF() {
+    const statusEl = document.getElementById("sal-status");
+    const fecha = document.getElementById("sal-fecha").value || new Date().toISOString().slice(0, 10);
+    const cuadrilla = document.getElementById("sal-cuadrilla").value.trim();
+    const recRp = document.getElementById("sal-rec-rp").value.trim();
+    const recNombre = document.getElementById("sal-rec-nombre").value.trim();
+    const actividad = document.getElementById("sal-actividad").value.trim();
+    const observaciones = document.getElementById("sal-obs").value.trim();
+
+    if (valeDraft.length === 0) {
+      statusEl.textContent = "Agrega al menos un material al vale.";
+      return;
+    }
+    if (!recNombre) {
+      statusEl.textContent = "Indica el nombre de quien recibe.";
+      return;
+    }
+
+    try {
+      const folio = siguienteFolio("salida");
+      const creados = await sbRest("movimientos", "POST", {
+        tipo: "salida",
+        folio: folio,
+        fecha: fecha,
+        usuario_rp: usuarioActual.rp,
+        usuario_nombre: usuarioActual.nombre,
+        cuadrilla: cuadrilla,
+        receptor_rp: recRp,
+        receptor_nombre: recNombre,
+        actividad: actividad,
+        observaciones: observaciones
+      }, true);
+
+      const movData = creados[0];
+      const filasDetalle = valeDraft.map(function(d) {
+        return {
+          movimiento_id: movData.id,
+          material_id: d.material_id,
+          codigo: d.codigo,
+          descripcion: d.descripcion,
+          unidad: d.unidad,
+          cantidad: d.cantidad
+        };
+      });
+      await sbRest("movimiento_detalle", "POST", filasDetalle);
+
+      for (let i = 0; i < valeDraft.length; i++) {
+        const d = valeDraft[i];
+        const mat = materiales.find(function(m) { return String(m.id) === String(d.material_id); });
+        if (mat) {
+          const nuevoStock = Math.max(0, Number(mat.stock_actual) - Number(d.cantidad));
+          await sbRest("materiales?id=eq." + encodeURIComponent(mat.id), "PATCH", {
+            stock_actual: nuevoStock,
+            actualizado_en: new Date().toISOString()
+          });
+        }
+      }
+
+      descargarPDFVale(movData, filasDetalle);
+      valeDraft = [];
+      renderValeDraft();
+      document.getElementById("sal-cuadrilla").value = "";
+      document.getElementById("sal-rec-rp").value = "";
+      document.getElementById("sal-rec-nombre").value = "";
+      document.getElementById("sal-actividad").value = "";
+      document.getElementById("sal-obs").value = "";
+      statusEl.textContent = "Vale " + folio + " registrado y PDF descargado.";
+      await cargarTodo();
+    } catch (err) {
+      statusEl.textContent = "Error al registrar salida: " + (err.message || err);
+    }
+  }
+
+  function descargarPDFVale(mov, items) {
+    if (!window.jspdf) {
+      alert("No cargó el generador PDF. Revisa tu conexión a internet.");
+      return;
+    }
+    const jsPDF = window.jspdf.jsPDF;
+    const doc = new jsPDF();
+
+    doc.setFontSize(14);
+    doc.setTextColor(0, 104, 55);
+    doc.text("COMISIÓN FEDERAL DE ELECTRICIDAD", 14, 18);
+    doc.setFontSize(11);
+    doc.setTextColor(30, 30, 30);
+    doc.text("Zona Altos / Área Yahualica · Vale de Salida de Material", 14, 25);
+
+    doc.setFontSize(10);
+    doc.text("Folio: " + mov.folio, 14, 35);
+    doc.text("Fecha: " + mov.fecha, 110, 35);
+    doc.text("Cuadrilla: " + (mov.cuadrilla || "-"), 14, 42);
+    doc.text("Receptor: " + (mov.receptor_nombre || "-") + " (RPE: " + (mov.receptor_rp || "-") + ")", 14, 49);
+    doc.text("Actividad: " + (mov.actividad || "-"), 14, 56);
+    doc.text("Observaciones: " + (mov.observaciones || "-"), 14, 63);
+
+    doc.autoTable({
+      startY: 70,
+      head: [["Código", "Descripción", "Unidad", "Cantidad"]],
+      body: items.map(function(i) {
+        return [i.codigo, i.descripcion, i.unidad, String(i.cantidad)];
+      })
+    });
+
+    const yFirmas = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 120) + 28;
+    doc.line(14, yFirmas, 90, yFirmas);
+    doc.text("Entregó: " + mov.usuario_nombre + " (" + mov.usuario_rp + ")", 14, yFirmas + 6);
+
+    doc.line(115, yFirmas, 195, yFirmas);
+    doc.text("Recibió: " + (mov.receptor_nombre || ""), 115, yFirmas + 6);
+
+    doc.save(mov.folio + "_CFE_Yahualica.pdf");
+  }
+
+  function descargarPDFPorId(movId) {
+    const mov = movimientos.find(function(m) { return String(m.id) === String(movId); });
+    if (!mov) return;
+    const items = detallesMov.filter(function(d) { return String(d.movimiento_id) === String(movId); });
+    descargarPDFVale(mov, items);
+  }
+
+  function renderMovimientos() {
+    const tbody = document.getElementById("tbody-movimientos");
+    tbody.innerHTML = "";
+    movimientos.forEach(function(m) {
+      const items = detallesMov.filter(function(d) { return String(d.movimiento_id) === String(m.id); });
+      const resumenItems = items.map(function(i) {
+        return i.cantidad + " " + i.unidad + " · " + i.codigo + " (" + i.descripcion + ")";
+      }).join("<br>");
+      const receptorInfo = m.tipo === "salida"
+        ? (m.cuadrilla || "") + " / " + (m.receptor_nombre || "") + " (" + (m.receptor_rp || "") + ")"
+        : "Bodega";
+      const btnPdf = m.tipo === "salida"
+        ? '<button type="button" class="btn btn-blue" style="padding:5px 8px; font-size:12px;" onclick="descargarPDFPorId(\'' + m.id + '\')">PDF</button>'
+        : "-";
+
+      tbody.innerHTML +=
+        "<tr>" +
+          "<td><strong>" + m.folio + "</strong></td>" +
+          "<td>" + m.tipo.toUpperCase() + "</td>" +
+          "<td>" + m.fecha + "</td>" +
+          "<td>" + m.usuario_nombre + " (" + m.usuario_rp + ")</td>" +
+          "<td>" + receptorInfo + "</td>" +
+          "<td>" + (m.actividad || "-") + "</td>" +
+          "<td>" + (m.observaciones || "-") + "</td>" +
+          "<td>" + (resumenItems || "-") + "</td>" +
+          "<td>" + btnPdf + "</td>" +
+        "</tr>";
+    });
+  }
+
+  function renderPerfiles() {
+    const tbody = document.getElementById("tbody-perfiles");
+    tbody.innerHTML = "";
+    perfiles.forEach(function(p) {
+      tbody.innerHTML +=
+        "<tr>" +
+          "<td>" + p.rp + "</td>" +
+          "<td>" + p.nombre + "</td>" +
+          "<td>" + p.rol + "</td>" +
+          "<td>" + (p.activo ? "Activo" : "Inactivo") + "</td>" +
+          '<td><button type="button" class="btn btn-red" onclick="togglePerfil(\'' + p.id + '\', ' + (!p.activo) + ')">' + (p.activo ? "Desactivar" : "Activar") + "</button></td>" +
+        "</tr>";
+    });
+  }
+
+  async function crearPerfil() {
+    if (!usuarioActual || usuarioActual.rol !== "admin") return;
+    const rp = document.getElementById("perf-rp").value.trim();
+    const nombre = document.getElementById("perf-nombre").value.trim();
+    const password = document.getElementById("perf-pass").value;
+    const rol = document.getElementById("perf-rol").value;
+    if (!rp || !nombre || !password) {
+      alert("Completa RPE, nombre y contraseña.");
+      return;
+    }
+    try {
+      await sbRest("perfiles", "POST", {
+        rp: rp,
+        nombre: nombre,
+        password: password,
+        rol: rol,
+        activo: true
+      });
+      document.getElementById("perf-rp").value = "";
+      document.getElementById("perf-nombre").value = "";
+      document.getElementById("perf-pass").value = "";
+      await cargarTodo();
+    } catch (err) {
+      alert("Error al crear perfil: " + (err.message || err));
+    }
+  }
+
+  async function togglePerfil(id, nuevoEstado) {
+    if (!usuarioActual || usuarioActual.rol !== "admin") return;
+    try {
+      await sbRest("perfiles?id=eq." + encodeURIComponent(id), "PATCH", { activo: nuevoEstado });
+      await cargarTodo();
+    } catch (err) {
+      alert("Error al actualizar perfil: " + (err.message || err));
+    }
+  }
+</script>
+</body>
+</html>
